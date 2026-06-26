@@ -1,0 +1,32 @@
+{
+  "id": "philosophical_analysis_v1",
+  "version": "1.0.0",
+  "llm_target": "ollama",
+  "grammar_mode": "reactor",
+  "input_ontology_slots": [
+    {"type": "Substance", "name": "Concept"},
+    {"type": "TensionNode", "name": "Contradiction"}
+  ],
+  "template": "Ты — ГМ-агент. Проанализируй следующий текст и выдели субстанции (Substance) и противоречия (TensionNode) между ними. Верни результат строго в формате JSON: {\"substances\": [{\"id\": \"...\", \"name\": \"...\", \"energy\": 0.0-1.0}], \"tensions\": [{\"id\": \"t_0\", \"pole_a\": \"id1\", \"pole_b\": \"id2\", \"reason\": \"...\", \"status\": \"held\"}]}.\n\nТекст: {text}",
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "substances": {"type": "array"},
+      "tensions": {"type": "array"}
+    }
+  },
+  "examples": [
+    {
+      "input": "Свобода и необходимость",
+      "output": {
+        "substances": [
+          {"id": "свобода", "name": "Свобода", "energy": 0.8},
+          {"id": "необходимость", "name": "Необходимость", "energy": 0.4}
+        ],
+        "tensions": [
+          {"id": "t_0", "pole_a": "свобода", "pole_b": "необходимость", "reason": "antinomy", "status": "held"}
+        ]
+      }
+    }
+  ]
+}

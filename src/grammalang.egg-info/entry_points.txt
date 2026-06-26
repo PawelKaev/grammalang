@@ -1,0 +1,2 @@
+[console_scripts]
+grammalang = grammalang.cli:main
