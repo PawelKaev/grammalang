@@ -47,6 +47,7 @@ class OntologicalContext(BaseModel):
     substances: Dict[str, Substance] = Field(default_factory=dict)
     modi: Dict[str, List[Modus]] = Field(default_factory=dict)
     tensions: List[TensionNode] = Field(default_factory=list)
+    boundaries: List[Boundary] = Field(default_factory=list)
 
     def add_substance(self, substance: Substance) -> None:
         self.substances[substance.id] = substance

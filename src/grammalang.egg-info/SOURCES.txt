@@ -3,6 +3,7 @@ src/grammalang/__init__.py
 src/grammalang/cli.py
 src/grammalang/ontology.py
 src/grammalang/pipeline.py
+src/grammalang/server.py
 src/grammalang.egg-info/PKG-INFO
 src/grammalang.egg-info/SOURCES.txt
 src/grammalang.egg-info/dependency_links.txt
@@ -10,6 +11,7 @@ src/grammalang.egg-info/entry_points.txt
 src/grammalang.egg-info/requires.txt
 src/grammalang.egg-info/top_level.txt
 src/grammalang/analyzers/__init__.py
+src/grammalang/analyzers/grammar_analyzer.py
 src/grammalang/analyzers/kantian.py
 src/grammalang/analyzers/rust_analyzer.py
 src/grammalang/generators/__init__.py
