@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GrammaLang — Анализатор философского текста</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #1a1a2e; color: #eee; display: flex; height: 100vh; }
+        
+        .panel { width: 400px; min-width: 400px; background: #16213e; display: flex; flex-direction: column; border-right: 2px solid #0f3460; }
+        .panel-header { padding: 20px; border-bottom: 1px solid #0f3460; }
+        .panel-header h1 { font-size: 22px; color: #e94560; margin-bottom: 5px; }
+        .panel-header p { font-size: 12px; color: #888; }
+        .panel-body { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+        
+        textarea { flex: 1; background: #1a1a2e; color: #eee; border: 1px solid #0f3460; border-radius: 5px; padding: 15px; font-family: 'Times New Roman', serif; font-size: 15px; line-height: 1.6; resize: none; min-height: 180px; }
+        textarea:focus { outline: none; border-color: #e94560; }
+        
+        .buttons { display: flex; gap: 10px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.2s; }
+        .btn-analyze { background: #e94560; color: #fff; }
+        .btn-analyze:hover { background: #c23152; }
+        .btn-analyze:disabled { background: #555; cursor: not-allowed; }
+        .btn-clear { background: #0f3460; color: #fff; }
+        .btn-clear:hover { background: #1a4a7a; }
+        .btn-example { background: transparent; color: #e94560; border: 1px solid #e94560; font-size: 12px; padding: 8px; }
+        .btn-example:hover { background: #e9456020; }
+        
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat { background: #1a1a2e; padding: 10px; border-radius: 5px; text-align: center; border: 1px solid #0f3460; }
+        .stat .num { font-size: 24px; font-weight: 700; color: #e94560; }
+        .stat .label { font-size: 11px; color: #888; margin-top: 3px; }
+        
+        .main { flex: 1; display: flex; flex-direction: column; }
+        .tabs { display: flex; background: #16213e; border-bottom: 2px solid #0f3460; }
+        .tab { padding: 12px 20px; cursor: pointer; font-size: 14px; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: 0.2s; }
+        .tab.active { color: #e94560; border-bottom-color: #e94560; }
+        .tab:hover { color: #fff; }
+        .tab-content { flex: 1; position: relative; overflow: hidden; }
+        .tab-pane { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
+        .tab-pane.active { display: block; }
+        
+        #graphCanvas { width: 100%; height: 100%; }
+        
+        .substance-list, .tension-list, .text-analysis { padding: 20px; overflow-y: auto; height: 100%; }
+        
+        .substance-card { background: #16213e; border: 1px solid #0f3460; border-radius: 8px; padding: 15px; margin-bottom: 10px; }
+        .substance-card h3 { color: #e94560; margin-bottom: 5px; }
+        .substance-card .energy-bar { height: 8px; background: #0f3460; border-radius: 4px; margin: 8px 0; overflow: hidden; }
+        .substance-card .energy-fill { height: 100%; background: linear-gradient(90deg, #3498db, #e94560); border-radius: 4px; transition: width 0.5s; }
+        .substance-card .modi { font-size: 12px; color: #aaa; }
+        .substance-card .modi span { color: #e94560; }
+        
+        .tension-card { background: #16213e; border: 1px solid #0f3460; border-radius: 8px; padding: 12px 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+        .tension-card .status { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+        .tension-card .status.held { background: #e94560; animation: pulse 1s infinite; }
+        .tension-card .status.resolved { background: #2ecc71; }
+        .tension-card .info { flex: 1; }
+        .tension-card .info strong { color: #e94560; }
+        .tension-card .info .reason { font-size: 11px; color: #888; }
+        
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        
+        .text-analysis { font-family: 'Times New Roman', serif; font-size: 16px; line-height: 1.8; }
+        .text-analysis .substance-hl { background: #e9456040; padding: 2px 4px; border-radius: 3px; border-bottom: 2px solid #e94560; cursor: pointer; }
+        .text-analysis .tension-hl { background: #f39c1240; padding: 2px 4px; border-radius: 3px; border-bottom: 2px dashed #f39c12; cursor: pointer; }
+        .text-analysis .modus-hl { background: #3498db40; padding: 2px 4px; border-radius: 3px; border-bottom: 2px dotted #3498db; cursor: pointer; }
+        .text-analysis .legend { margin-bottom: 15px; font-size: 12px; font-family: sans-serif; display: flex; gap: 20px; }
+        .text-analysis .legend span { display: inline-flex; align-items: center; gap: 5px; }
+        .text-analysis .legend .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; }
+        
+        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #888; }
+        .loading .spinner { width: 40px; height: 40px; border: 3px solid #0f3460; border-top-color: #e94560; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <div class="panel-header">
+            <h1>GrammaLang</h1>
+            <p>Грамматическая Машина — анализ философского текста</p>
+        </div>
+        <div class="panel-body">
+            <button class="btn-example" onclick="loadExample()">📄 Загрузить пример (Кант)</button>
+            <textarea id="textInput" placeholder="Введите философский текст для анализа..."></textarea>
+            <div class="buttons">
+                <button class="btn-analyze" id="btnAnalyze" onclick="analyze()">▶ Анализ</button>
+                <button class="btn-clear" onclick="clearAll()">✕ Очистить</button>
+            </div>
+            <div class="stats" id="stats">
+                <div class="stat"><div class="num" id="statSubstances">0</div><div class="label">Субстанции</div></div>
+                <div class="stat"><div class="num" id="statTensions">0</div><div class="label">Противоречия</div></div>
+                <div class="stat"><div class="num" id="statHeld">0</div><div class="label">Удерживаются</div></div>
+                <div class="stat"><div class="num" id="statResolved">0</div><div class="label">Разрешены</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('graph')">◉ Граф</div>
+            <div class="tab" onclick="switchTab('substances')">⬤ Субстанции</div>
+            <div class="tab" onclick="switchTab('tensions')">⬡ Противоречия</div>
+            <div class="tab" onclick="switchTab('text')">📝 Текст</div>
+        </div>
+        <div class="tab-content">
+            <div class="tab-pane active" id="tab-graph">
+                <canvas id="graphCanvas"></canvas>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <div>Анализ текста...</div>
+                </div>
+            </div>
+            <div class="tab-pane" id="tab-substances">
+                <div class="substance-list" id="substanceList"></div>
+            </div>
+            <div class="tab-pane" id="tab-tensions">
+                <div class="tension-list" id="tensionList"></div>
+            </div>
+            <div class="tab-pane" id="tab-text">
+                <div class="text-analysis" id="textAnalysis"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let data = null;
+        let originalText = '';
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const loading = document.getElementById('loading');
+        loading.style.display = 'none';
+
+        function resize() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            if (data) drawGraph();
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function loadExample() {
+            document.getElementById('textInput').value = 
+                'Разум видит только то, что сам создаёт по собственному плану. ' +
+                'Он должен идти впереди с принципами своих суждений по постоянным законам ' +
+                'и заставлять природу отвечать на его вопросы, а не тащиться у неё на поводу. ' +
+                'Но случайные наблюдения, производимые без предварительного плана, ' +
+                'не связаны необходимым законом, тогда как разум ищет и нуждается в таком законе.';
+        }
+
+        function clearAll() {
+            document.getElementById('textInput').value = '';
+            data = null;
+            originalText = '';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById('substanceList').innerHTML = '';
+            document.getElementById('tensionList').innerHTML = '';
+            document.getElementById('textAnalysis').innerHTML = '';
+            updateStats(null);
+        }
+
+        function updateStats(result) {
+            const ids = ['statSubstances', 'statTensions', 'statHeld', 'statResolved'];
+            ids.forEach(id => document.getElementById(id).textContent = '0');
+            if (!result || !result.stats) return;
+            document.getElementById('statSubstances').textContent = result.stats.total_substances;
+            document.getElementById('statTensions').textContent = result.stats.total_tensions;
+            document.getElementById('statHeld').textContent = result.stats.held_tensions;
+            document.getElementById('statResolved').textContent = result.stats.resolved_tensions;
+        }
+
+        async function analyze() {
+            const text = document.getElementById('textInput').value.trim();
+            if (!text) return;
+
+            originalText = text;
+            const btn = document.getElementById('btnAnalyze');
+            btn.disabled = true;
+            btn.textContent = '⏳ Анализ...';
+            loading.style.display = 'block';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            try {
+                const response = await fetch('http://localhost:8080/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                data = await response.json();
+                updateStats(data);
+                drawGraph();
+                renderSubstances();
+                renderTensions();
+                renderTextAnalysis();
+            } catch (e) {
+                alert('Ошибка соединения с сервером. Убедитесь, что сервер запущен на порту 8080.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '▶ Анализ';
+                loading.style.display = 'none';
+            }
+        }
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!data || !data.substances.length) return;
+
+            const subs = data.substances;
+            const tens = data.tensions;
+            const positions = {};
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const r = Math.min(cx, cy) * 0.4;
+            const n = subs.length;
+
+            subs.forEach((s, i) => {
+                const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+                positions[s.id] = { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+            });
+
+            tens.forEach(t => {
+                const a = positions[t.pole_a];
+                const b = positions[t.pole_b];
+                if (!a || !b) return;
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.strokeStyle = t.status === 'held' ? '#e94560' : '#2ecc71';
+                ctx.setLineDash(t.status === 'held' ? [8, 4] : []);
+                ctx.lineWidth = t.status === 'held' ? 3 : 2;
+                ctx.stroke();
+                ctx.setLineDash([]);
+                const mx = (a.x + b.x) / 2;
+                const my = (a.y + b.y) / 2 - 10;
+                ctx.fillStyle = '#888';
+                ctx.font = '10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(t.reason, mx, my);
+            });
+
+            subs.forEach(s => {
+                const p = positions[s.id];
+                if (!p) return;
+                const radius = 20 + s.energy * 35;
+                const grad = ctx.createRadialGradient(p.x, p.y, radius * 0.3, p.x, p.y, radius);
+                grad.addColorStop(0, '#ff6b6b');
+                grad.addColorStop(0.5, s.energy > 0.5 ? '#e94560' : '#3498db');
+                grad.addColorStop(1, s.energy > 0.5 ? '#c23152' : '#2980b9');
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(s.name, p.x, p.y + 4);
+                ctx.font = '10px sans-serif';
+                ctx.fillStyle = '#ccc';
+                ctx.fillText(s.energy.toFixed(2), p.x, p.y + radius + 14);
+            });
+        }
+
+        function renderSubstances() {
+            const container = document.getElementById('substanceList');
+            container.innerHTML = data.substances.map(s => `
+                <div class="substance-card">
+                    <h3>${s.name}</h3>
+                    <div style="font-size:12px;color:#888;">ID: ${s.id} | Энергия: ${s.energy.toFixed(2)}</div>
+                    <div class="energy-bar"><div class="energy-fill" style="width:${s.energy*100}%"></div></div>
+                    ${s.modi && s.modi.length ? `<div class="modi">Модусы: ${s.modi.map(m => `<span>${m.value}</span>`).join(', ')}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderTensions() {
+            const container = document.getElementById('tensionList');
+            container.innerHTML = data.tensions.map(t => `
+                <div class="tension-card">
+                    <div class="status ${t.status}"></div>
+                    <div class="info">
+                        <strong>${t.pole_a}</strong> ↔ <strong>${t.pole_b}</strong>
+                        <div class="reason">${t.reason} · ${t.status === 'held' ? 'Удерживается' : 'Разрешено'}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTextAnalysis() {
+            const container = document.getElementById('textAnalysis');
+            if (!originalText || !data) return;
+
+            let html = originalText;
+
+            // Подсвечиваем субстанции
+            data.substances.forEach(s => {
+                const regex = new RegExp(`(${s.name})`, 'gi');
+                html = html.replace(regex, `<span class="substance-hl" title="Субстанция: ${s.name} (энергия: ${s.energy.toFixed(2)})">$1</span>`);
+            });
+
+            // Подсвечиваем маркеры противоречий
+            const markers = ['но', 'однако', 'хотя', 'тем не менее', 'вопреки', 'напротив', 'с другой стороны', 'в то же время', 'тогда как', 'а не', 'в отличие'];
+            markers.forEach(m => {
+                const regex = new RegExp(`(${m})`, 'gi');
+                html = html.replace(regex, `<span class="tension-hl" title="Маркер противоречия">$1</span>`);
+            });
+
+            // Подсвечиваем модусы
+            const allModi = [];
+            data.substances.forEach(s => {
+                if (s.modi) s.modi.forEach(m => allModi.push(m.value));
+            });
+            allModi.forEach(m => {
+                const regex = new RegExp(`(${m})`, 'gi');
+                html = html.replace(regex, `<span class="modus-hl" title="Модус">$1</span>`);
+            });
+
+            container.innerHTML = `
+                <div class="legend">
+                    <span><span class="swatch" style="background:#e9456040;border-bottom:2px solid #e94560"></span> Субстанции</span>
+                    <span><span class="swatch" style="background:#f39c1240;border-bottom:2px dashed #f39c12"></span> Противоречия</span>
+                    <span><span class="swatch" style="background:#3498db40;border-bottom:2px dotted #3498db"></span> Модусы</span>
+                </div>
+                ${html}
+            `;
+        }
+
+        function switchTab(name) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            const tabIndex = { graph: 1, substances: 2, tensions: 3, text: 4 }[name];
+            document.querySelector(`.tab:nth-child(${tabIndex})`).classList.add('active');
+            document.getElementById(`tab-${name}`).classList.add('active');
+            if (name === 'graph') { resize(); drawGraph(); }
+        }
+    </script>
+</body>
+</html>
