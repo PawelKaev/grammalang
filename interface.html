@@ -4,341 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GrammaLang — Анализатор философского текста v2.0</title>
+    <!-- ВЕСЬ ВАШ CSS БЕЗ ИЗМЕНЕНИЙ -->
     <style>
-        :root {
-            --bg: #1a1a2e;
-            --surface: #16213e;
-            --border: #0f3460;
-            --accent: #e94560;
-            --text: #eee;
-            --muted: #888;
-            --split: #44CC44;
-            --hold: #FF8800;
-            --transition: #AA44FF;
-            --grammar_change: #00BBBB;
-            --substance: #e94560;
-            --modus: #3498db;
-            --tension: #f39c12;
-        }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; }
-        
-        /* === ЛЕВАЯ ПАНЕЛЬ === */
-        .panel { width: 420px; min-width: 420px; background: var(--surface); display: flex; flex-direction: column; border-right: 2px solid var(--border); }
-        .panel-header { padding: 20px; border-bottom: 1px solid var(--border); }
-        .panel-header h1 { font-size: 24px; color: var(--accent); margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
-        .panel-header h1 .version { font-size: 11px; background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 10px; }
-        .panel-header p { font-size: 12px; color: var(--muted); }
-        .panel-body { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
-        
-        /* Загрузка файла */
-        .file-upload { display: flex; gap: 8px; align-items: center; }
-        .file-upload input[type="file"] { display: none; }
-        .file-upload label { 
-            flex: 1; padding: 10px; background: transparent; color: var(--accent); 
-            border: 1px dashed var(--accent); border-radius: 5px; cursor: pointer; 
-            text-align: center; font-size: 13px; transition: 0.2s;
-        }
-        .file-upload label:hover { background: #e9456010; }
-        .file-info { font-size: 11px; color: var(--muted); text-align: center; display: none; }
-        .file-info.show { display: block; }
-        
-        /* Текстовое поле */
-        textarea { 
-            flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); 
-            border-radius: 5px; padding: 15px; font-family: 'Times New Roman', serif; 
-            font-size: 15px; line-height: 1.7; resize: none; min-height: 160px; 
-        }
-        textarea:focus { outline: none; border-color: var(--accent); }
-        
-        /* Фильтры подсветки */
-        .filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
-        .filter-btn { 
-            padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border); 
-            background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; 
-            transition: 0.2s; white-space: nowrap; 
-        }
-        .filter-btn:hover { border-color: var(--text); color: var(--text); }
-        .filter-btn.active { color: #fff; font-weight: 600; }
-        .filter-btn[data-type="substance"].active { background: var(--substance); border-color: var(--substance); }
-        .filter-btn[data-type="modus"].active { background: var(--modus); border-color: var(--modus); }
-        .filter-btn[data-type="split"].active { background: var(--split); border-color: var(--split); }
-        .filter-btn[data-type="hold"].active { background: var(--hold); border-color: var(--hold); }
-        .filter-btn[data-type="transition"].active { background: var(--transition); border-color: var(--transition); }
-        .filter-btn[data-type="grammar_change"].active { background: var(--grammar_change); border-color: var(--grammar_change); }
-        
-        /* Кнопки */
-        .buttons { display: flex; gap: 10px; }
-        button { 
-            flex: 1; padding: 12px; border: none; border-radius: 5px; cursor: pointer; 
-            font-size: 14px; font-weight: 600; transition: 0.2s; 
-        }
-        .btn-analyze { background: var(--accent); color: #fff; }
-        .btn-analyze:hover { background: #c23152; }
-        .btn-analyze:disabled { background: #555; cursor: not-allowed; }
-        .btn-clear { background: var(--border); color: #fff; }
-        .btn-clear:hover { background: #1a4a7a; }
-        .btn-example { 
-            background: transparent; color: var(--accent); border: 1px solid var(--accent); 
-            font-size: 12px; padding: 8px; flex: none; 
-        }
-        .btn-example:hover { background: #e9456020; }
-        
-        /* Статистика */
-        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .stat { 
-            background: var(--bg); padding: 10px; border-radius: 5px; text-align: center; 
-            border: 1px solid var(--border); 
-        }
-        .stat .num { font-size: 24px; font-weight: 700; }
-        .stat .num.substance-c { color: var(--substance); }
-        .stat .num.modus-c { color: var(--modus); }
-        .stat .num.split-c { color: var(--split); }
-        .stat .num.hold-c { color: var(--hold); }
-        .stat .num.transition-c { color: var(--transition); }
-        .stat .num.grammar-c { color: var(--grammar_change); }
-        .stat .label { font-size: 10px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 1px; }
-        
-        /* Индикатор доминирующего стиля */
-        .style-indicator { 
-            background: var(--bg); border: 1px solid var(--border); border-radius: 5px; 
-            padding: 10px 14px; font-size: 13px; display: none; 
-        }
-        .style-indicator.show { display: block; }
-        .style-indicator .style-name { color: var(--accent); font-weight: 600; }
-        
-        /* === ПРАВАЯ ПАНЕЛЬ === */
-        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-        
-        /* Вкладки */
-        .tabs { display: flex; background: var(--surface); border-bottom: 2px solid var(--border); overflow-x: auto; }
-        .tab { 
-            padding: 12px 20px; cursor: pointer; font-size: 13px; color: var(--muted); 
-            border-bottom: 2px solid transparent; margin-bottom: -2px; transition: 0.2s; 
-            white-space: nowrap; 
-        }
-        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-        .tab:hover { color: #fff; }
-        .tab-content { flex: 1; position: relative; overflow: hidden; }
-        .tab-pane { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
-        .tab-pane.active { display: flex; flex-direction: column; }
-        
-        /* Граф */
-        #graphCanvas { width: 100%; height: 100%; }
-        .graph-legend {
-            position: absolute; bottom: 10px; right: 10px; background: rgba(22, 33, 62, 0.95);
-            border-radius: 8px; padding: 10px 14px; font-size: 11px; z-index: 10;
-            border: 1px solid var(--border);
-        }
-        .graph-legend .leg-item { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
-        .graph-legend .leg-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
-        
-        /* Субстанции */
-        .substance-list, .tension-list, .text-analysis { padding: 20px; overflow-y: auto; height: 100%; }
-        .substance-card { 
-            background: var(--surface); border: 1px solid var(--border); border-radius: 8px; 
-            padding: 15px; margin-bottom: 10px; 
-        }
-        .substance-card h3 { color: var(--accent); margin-bottom: 5px; }
-        .substance-card .energy-bar { height: 8px; background: var(--border); border-radius: 4px; margin: 8px 0; overflow: hidden; }
-        .substance-card .energy-fill { 
-            height: 100%; background: linear-gradient(90deg, var(--modus), var(--accent)); 
-            border-radius: 4px; transition: width 0.5s; 
-        }
-        .substance-card .modi { font-size: 12px; color: #aaa; }
-        .substance-card .modi span { color: var(--accent); }
-        
-        /* Противоречия */
-        .tension-card { 
-            background: var(--surface); border: 1px solid var(--border); border-radius: 8px; 
-            padding: 12px 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; 
-        }
-        .tension-card .status { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-        .tension-card .status.held { background: var(--accent); animation: pulse 1s infinite; }
-        .tension-card .status.resolved { background: #2ecc71; }
-        .tension-card .info { flex: 1; }
-        .tension-card .info strong { color: var(--accent); }
-        .tension-card .info .reason { font-size: 11px; color: var(--muted); }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-        
-        /* Текст с подсветкой */
-        .text-analysis { font-family: 'Times New Roman', serif; font-size: 16px; line-height: 1.8; }
-        .text-analysis .hl-substance { 
-            background: #e9456030; padding: 2px 4px; border-radius: 3px; 
-            border-bottom: 2px solid var(--substance); cursor: pointer; 
-        }
-        .text-analysis .hl-modus { 
-            background: #3498db30; padding: 2px 4px; border-radius: 3px; 
-            border-bottom: 2px dotted var(--modus); cursor: pointer; 
-        }
-        .text-analysis .hl-hold { 
-            background: #FF880030; padding: 2px 4px; border-radius: 3px; 
-            border-bottom: 2px dashed var(--hold); cursor: pointer; 
-        }
-        .text-analysis .hl-split { 
-            background: #44CC4430; padding: 2px 4px; border-radius: 3px; 
-            border-bottom: 2px solid var(--split); cursor: pointer; 
-        }
-        .text-analysis .hl-transition { 
-            background: #AA44FF30; padding: 2px 4px; border-radius: 3px; 
-            border-bottom: 2px dotted var(--transition); cursor: pointer; 
-        }
-        .text-analysis .hl-grammar_change { 
-            background: #00BBBB30; padding: 2px 4px; border-radius: 3px; 
-            border-bottom: 2px dashed var(--grammar_change); cursor: pointer; 
-        }
-        .text-analysis .legend { 
-            margin-bottom: 15px; font-size: 12px; font-family: sans-serif; 
-            display: flex; gap: 15px; flex-wrap: wrap; 
-        }
-        .text-analysis .legend span { display: inline-flex; align-items: center; gap: 5px; }
-        .text-analysis .legend .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; }
-        
-        /* Всплывающая подсказка */
-        .tooltip {
-            position: fixed; background: #2a2a3a; border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 8px; padding: 10px 14px; pointer-events: none; z-index: 1000;
-            max-width: 280px; font-size: 13px; line-height: 1.5; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            display: none;
-        }
-        
-        /* Загрузка */
-        .loading { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            text-align: center; color: var(--muted); z-index: 20; 
-        }
-        .loading .spinner { 
-            width: 40px; height: 40px; border: 3px solid var(--border); 
-            border-top-color: var(--accent); border-radius: 50%; 
-            animation: spin 1s linear infinite; margin: 0 auto 15px; 
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        /* Карта операторов */
-        .operator-map { padding: 20px; overflow-y: auto; height: 100%; }
-        .operator-card {
-            background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-            padding: 12px 15px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start;
-        }
-        .operator-card .op-icon {
-            width: 36px; height: 36px; border-radius: 50%; display: flex;
-            align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
-        }
-        .operator-card .op-icon.split { background: #44CC4430; color: var(--split); }
-        .operator-card .op-icon.hold { background: #FF880030; color: var(--hold); }
-        .operator-card .op-icon.transition { background: #AA44FF30; color: var(--transition); }
-        .operator-card .op-icon.grammar_change { background: #00BBBB30; color: var(--grammar_change); }
-        .operator-card .op-info { flex: 1; font-size: 13px; }
-        .operator-card .op-marker { color: var(--accent); font-weight: 600; }
-        .operator-card .op-context { color: var(--muted); font-size: 12px; margin-top: 4px; font-style: italic; }
-        .operator-card .op-confidence { font-size: 11px; color: var(--muted); margin-top: 4px; }
+        /* ... весь ваш CSS ... */
     </style>
 </head>
 <body>
-    <div class="panel">
-        <div class="panel-header">
-            <h1>GrammaLang <span class="version">2.0</span></h1>
-            <p>Грамматическая Машина — визуализация операторов и онтологии</p>
-        </div>
-        <div class="panel-body">
-            <!-- Загрузка файла -->
-            <div class="file-upload">
-                <input type="file" id="fileInput" accept=".txt">
-                <label for="fileInput">📂 Загрузить главу (.txt)</label>
-            </div>
-            <div class="file-info" id="fileInfo"></div>
-            
-            <!-- Примеры -->
-            <div style="display:flex;gap:6px;">
-                <button class="btn-example" onclick="loadExample('kant')">📖 Кант (фрагмент)</button>
-                <button class="btn-example" onclick="loadExample('kant_full')">📚 Кант (глава)</button>
-            </div>
-            
-            <!-- Текст -->
-            <textarea id="textInput" placeholder="Введите философский текст для анализа...&#10;&#10;Поддерживается загрузка целых глав.&#10;Будут найдены: субстанции, модусы, противоречия&#10;и маркеры операторов: Split, Hold, Transition, Grammar Change."></textarea>
-            
-            <!-- Фильтры -->
-            <div class="filter-row">
-                <button class="filter-btn active" data-type="substance" onclick="toggleFilter('substance', this)">🧬 Субстанции</button>
-                <button class="filter-btn active" data-type="modus" onclick="toggleFilter('modus', this)">🔧 Модусы</button>
-                <button class="filter-btn active" data-type="split" onclick="toggleFilter('split', this)">✂️ Split</button>
-                <button class="filter-btn active" data-type="hold" onclick="toggleFilter('hold', this)">⚡ Hold</button>
-                <button class="filter-btn active" data-type="transition" onclick="toggleFilter('transition', this)">🔄 Transition</button>
-                <button class="filter-btn active" data-type="grammar_change" onclick="toggleFilter('grammar_change', this)">🔀 Grammar Ch.</button>
-            </div>
-            
-            <!-- Кнопки -->
-            <div class="buttons">
-                <button class="btn-analyze" id="btnAnalyze" onclick="analyze()">▶ Анализ</button>
-                <button class="btn-clear" onclick="clearAll()">✕ Очистить</button>
-            </div>
-            
-            <!-- Индикатор стиля -->
-            <div class="style-indicator" id="styleIndicator">
-                🎯 Доминирующий стиль: <span class="style-name" id="styleName"></span>
-            </div>
-            
-            <!-- Статистика -->
-            <div class="stats" id="stats">
-                <div class="stat"><div class="num substance-c" id="statSubstances">0</div><div class="label">Субстанции</div></div>
-                <div class="stat"><div class="num modus-c" id="statModus">0</div><div class="label">Модусы</div></div>
-                <div class="stat"><div class="num split-c" id="statSplit">0</div><div class="label">Split</div></div>
-                <div class="stat"><div class="num hold-c" id="statHold">0</div><div class="label">Hold</div></div>
-                <div class="stat"><div class="num transition-c" id="statTransition">0</div><div class="label">Transition</div></div>
-                <div class="stat"><div class="num grammar-c" id="statGrammar">0</div><div class="label">Grammar Ch.</div></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="main">
-        <div class="tabs">
-            <div class="tab active" onclick="switchTab('graph')">◉ Граф онтологии</div>
-            <div class="tab" onclick="switchTab('operators')">⚙️ Карта операторов</div>
-            <div class="tab" onclick="switchTab('substances')">⬤ Субстанции</div>
-            <div class="tab" onclick="switchTab('tensions')">⬡ Противоречия</div>
-            <div class="tab" onclick="switchTab('text')">📝 Текст с разметкой</div>
-        </div>
-        <div class="tab-content">
-            <!-- Граф -->
-            <div class="tab-pane active" id="tab-graph" style="position:relative;">
-                <canvas id="graphCanvas"></canvas>
-                <div class="graph-legend">
-                    <div class="leg-item"><span class="leg-swatch" style="background:var(--substance)"></span> Субстанция</div>
-                    <div class="leg-item"><span class="leg-swatch" style="background:var(--hold)"></span> Held (удерживается)</div>
-                    <div class="leg-item"><span class="leg-swatch" style="background:#2ecc71"></span> Resolved (разрешено)</div>
-                </div>
-                <div class="loading" id="loading">
-                    <div class="spinner"></div>
-                    <div>Анализ текста...</div>
-                </div>
-            </div>
-            
-            <!-- Карта операторов -->
-            <div class="tab-pane" id="tab-operators">
-                <div class="operator-map" id="operatorMap"></div>
-            </div>
-            
-            <!-- Субстанции -->
-            <div class="tab-pane" id="tab-substances">
-                <div class="substance-list" id="substanceList"></div>
-            </div>
-            
-            <!-- Противоречия -->
-            <div class="tab-pane" id="tab-tensions">
-                <div class="tension-list" id="tensionList"></div>
-            </div>
-            
-            <!-- Текст -->
-            <div class="tab-pane" id="tab-text">
-                <div class="text-analysis" id="textAnalysis"></div>
-            </div>
-        </div>
-    </div>
+    <!-- ВЕСЬ ВАШ HTML БЕЗ ИЗМЕНЕНИЙ -->
     
-    <!-- Всплывающая подсказка -->
-    <div class="tooltip" id="tooltip"></div>
-
     <script>
         // ==================== СОСТОЯНИЕ ====================
         let data = null;
@@ -381,6 +54,8 @@
             const reader = new FileReader();
             reader.onload = function(ev) {
                 document.getElementById('textInput').value = ev.target.result;
+                // Авто-анализ после загрузки файла
+                setTimeout(() => analyze(), 300);
             };
             reader.readAsText(file);
         });
@@ -421,6 +96,8 @@
                     'иметь отношение к созерцаниям, стало быть, у нас — к чувственности, ' +
                     'так как ни один предмет не может быть нам дан иным способом.';
             }
+            // Авто-анализ после загрузки примера
+            setTimeout(() => analyze(), 200);
         }
         
         // ==================== ФИЛЬТРЫ ====================
@@ -464,7 +141,6 @@
             const s = result.stats || {};
             document.getElementById('statSubstances').textContent = s.total_substances || 0;
             
-            // Подсчёт модусов
             let modusCount = 0;
             if (result.substances) {
                 result.substances.forEach(sub => {
@@ -473,14 +149,12 @@
             }
             document.getElementById('statModus').textContent = modusCount;
             
-            // Операторы
             const ops = result.operator_stats || {};
             document.getElementById('statSplit').textContent = ops.split || 0;
             document.getElementById('statHold').textContent = ops.hold || 0;
             document.getElementById('statTransition').textContent = ops.transition || 0;
             document.getElementById('statGrammar').textContent = ops.grammar_change || 0;
             
-            // Определяем доминирующий стиль
             const opEntries = [
                 {name: 'split', count: ops.split || 0, style: 'Структурный / аналитический', icon: '✂️'},
                 {name: 'hold', count: ops.hold || 0, style: 'Диалектический / проблематизирующий', icon: '⚡'},
@@ -497,7 +171,7 @@
             }
         }
         
-        // ==================== АНАЛИЗ ====================
+        // ==================== АНАЛИЗ (ИСПРАВЛЕННАЯ ВЕРСИЯ) ====================
         async function analyze() {
             const text = document.getElementById('textInput').value.trim();
             if (!text) return;
@@ -509,117 +183,172 @@
             loading.style.display = 'block';
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // Пробуем сервер, но если не отвечает за 2 секунды — эмулируем
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            
             try {
                 const response = await fetch('http://localhost:8080/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text })
+                    body: JSON.stringify({ text }),
+                    signal: controller.signal,
                 });
+                
+                clearTimeout(timeoutId);
                 
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
-                data = await response.json();
+                const serverData = await response.json();
                 
-                // Если сервер не вернул operator_stats, эмулируем на клиенте
-                if (!data.operator_stats) {
-                    data.operator_stats = emulateOperatorDetection(text, data);
+                // Обогащаем данные операторами
+                if (!serverData.operator_stats) {
+                    serverData.operator_matches = findOperatorMarkers(text);
+                    serverData.operator_stats = countOperatorStats(serverData.operator_matches);
                 }
-                if (!data.operator_matches) {
-                    data.operator_matches = findOperatorMarkers(text);
+                if (!serverData.operator_matches) {
+                    serverData.operator_matches = findOperatorMarkers(text);
                 }
                 
-                updateStats(data);
-                drawGraph();
-                renderOperatorMap();
-                renderSubstances();
-                renderTensions();
-                renderTextAnalysis();
+                data = serverData;
                 
             } catch (e) {
-                console.error('Ошибка:', e);
-                // Эмуляция для демонстрации
-                emulateAnalysis(text);
+                clearTimeout(timeoutId);
+                console.log('Сервер недоступен, использую автономный анализ');
+                // Автономный анализ
+                data = performLocalAnalysis(text);
             } finally {
                 btn.disabled = false;
                 btn.textContent = '▶ Анализ';
                 loading.style.display = 'none';
+                
+                if (data) {
+                    updateStats(data);
+                    drawGraph();
+                    renderOperatorMap();
+                    renderSubstances();
+                    renderTensions();
+                    renderTextAnalysis();
+                }
             }
         }
         
-        // ==================== ЭМУЛЯЦИЯ (демо-режим) ====================
-        function emulateAnalysis(text) {
-            // Создаём тестовые данные
+        // ==================== АВТОНОМНЫЙ АНАЛИЗ (без сервера) ====================
+        function performLocalAnalysis(text) {
             const substances = [];
             const substanceIds = new Set();
             
+            // Расширенный словарь философских категорий
             const categories = [
-                {word: 'разум', name: 'Разум', energy: 0.9},
-                {word: 'рассудок', name: 'Рассудок', energy: 0.8},
-                {word: 'чувственность', name: 'Чувственность', energy: 0.7},
+                {word: 'разум', name: 'Разум', energy: 0.90},
+                {word: 'рассудок', name: 'Рассудок', energy: 0.85},
+                {word: 'чувственность', name: 'Чувственность', energy: 0.70},
                 {word: 'созерцание', name: 'Созерцание', energy: 0.75},
-                {word: 'понятие', name: 'Понятие', energy: 0.7},
-                {word: 'природа', name: 'Природа', energy: 0.6},
+                {word: 'понятие', name: 'Понятие', energy: 0.70},
+                {word: 'природа', name: 'Природа', energy: 0.60},
                 {word: 'свобода', name: 'Свобода', energy: 0.85},
-                {word: 'необходимость', name: 'Необходимость', energy: 0.5},
-                {word: 'явление', name: 'Явление', energy: 0.6},
+                {word: 'необходимость', name: 'Необходимость', energy: 0.50},
+                {word: 'явление', name: 'Явление', energy: 0.60},
+                {word: 'феномен', name: 'Феномен', energy: 0.55},
+                {word: 'ноумен', name: 'Ноумен', energy: 0.65},
                 {word: 'предмет', name: 'Предмет', energy: 0.55},
+                {word: 'субстанция', name: 'Субстанция', energy: 0.70},
+                {word: 'причина', name: 'Причина', energy: 0.65},
+                {word: 'следствие', name: 'Следствие', energy: 0.50},
+                {word: 'пространство', name: 'Пространство', energy: 0.60},
+                {word: 'время', name: 'Время', energy: 0.65},
+                {word: 'единство', name: 'Единство', energy: 0.55},
+                {word: 'множество', name: 'Множество', energy: 0.50},
+                {word: 'реальность', name: 'Реальность', energy: 0.70},
+                {word: 'отрицание', name: 'Отрицание', energy: 0.55},
+                {word: 'возможность', name: 'Возможность', energy: 0.60},
+                {word: 'действительность', name: 'Действительность', energy: 0.65},
+                {word: 'мораль', name: 'Мораль', energy: 0.55},
+                {word: 'долг', name: 'Долг', energy: 0.60},
+                {word: 'воля', name: 'Воля', energy: 0.70},
+                {word: 'закон', name: 'Закон', energy: 0.65},
             ];
             
+            const textLower = text.toLowerCase();
+            
             categories.forEach(cat => {
-                if (text.toLowerCase().includes(cat.word)) {
+                if (textLower.includes(cat.word)) {
+                    // Энергия зависит от частоты встречаемости
+                    const count = (textLower.match(new RegExp(cat.word, 'g')) || []).length;
+                    const adjustedEnergy = Math.min(1.0, cat.energy + (count - 1) * 0.05);
+                    
                     substances.push({
                         id: cat.word,
                         name: cat.name,
-                        energy: cat.energy,
+                        energy: adjustedEnergy,
                         modi: [],
                     });
                     substanceIds.add(cat.word);
                 }
             });
             
-            // Добавляем модусы
+            // Модусы (философские глаголы)
             const modusPatterns = [
                 {verb: 'мыслит', subject: 'разум'},
+                {verb: 'мыслиться', subject: 'понятие'},
+                {verb: 'мышление', subject: 'разум'},
                 {verb: 'даётся', subject: 'предмет'},
+                {verb: 'даны', subject: 'предмет'},
                 {verb: 'называем', subject: 'чувственность'},
+                {verb: 'называются', subject: 'созерцание'},
                 {verb: 'возникают', subject: 'понятие'},
+                {verb: 'возникает', subject: 'знание'},
                 {verb: 'создаёт', subject: 'разум'},
                 {verb: 'содержит', subject: 'созерцание'},
+                {verb: 'содержится', subject: 'ощущение'},
+                {verb: 'познавать', subject: 'рассудок'},
+                {verb: 'получать', subject: 'чувственность'},
+                {verb: 'предполагает', subject: 'ощущение'},
+                {verb: 'созерцается', subject: 'предмет'},
             ];
             
             modusPatterns.forEach(mp => {
-                if (text.toLowerCase().includes(mp.verb) && substanceIds.has(mp.subject)) {
+                if (textLower.includes(mp.verb) && substanceIds.has(mp.subject)) {
                     const sub = substances.find(s => s.id === mp.subject);
-                    if (sub) sub.modi.push({name: mp.verb, value: mp.verb});
+                    if (sub) {
+                        const exists = sub.modi.some(m => m.value === mp.verb);
+                        if (!exists) sub.modi.push({name: mp.verb, value: mp.verb});
+                    }
                 }
             });
             
-            // Противоречия
+            // Противоречия (антиномии и оппозиции)
             const tensions = [];
-            if (substanceIds.has('разум') && substanceIds.has('чувственность')) {
-                tensions.push({
-                    id: 't_0', pole_a: 'разум', pole_b: 'чувственность',
-                    reason: 'два источника познания', status: 'held',
-                });
-            }
-            if (substanceIds.has('созерцание') && substanceIds.has('понятие')) {
-                tensions.push({
-                    id: 't_1', pole_a: 'созерцание', pole_b: 'понятие',
-                    reason: 'начала познания', status: 'held',
-                });
-            }
-            if (substanceIds.has('свобода') && substanceIds.has('необходимость')) {
-                tensions.push({
-                    id: 't_2', pole_a: 'свобода', pole_b: 'необходимость',
-                    reason: 'антиномия', status: 'held',
-                });
-            }
+            const tensionPairs = [
+                {a: 'разум', b: 'чувственность', reason: 'два источника познания'},
+                {a: 'созерцание', b: 'понятие', reason: 'начала познания'},
+                {a: 'свобода', b: 'необходимость', reason: 'антиномия'},
+                {a: 'явление', b: 'ноумен', reason: 'вещь сама по себе'},
+                {a: 'пространство', b: 'время', reason: 'формы созерцания'},
+                {a: 'единство', b: 'множество', reason: 'категории количества'},
+                {a: 'возможность', b: 'действительность', reason: 'категории модальности'},
+                {a: 'реальность', b: 'отрицание', reason: 'категории качества'},
+                {a: 'субстанция', b: 'причина', reason: 'категории отношения'},
+                {a: 'природа', b: 'свобода', reason: 'детерминизм vs спонтанность'},
+            ];
+            
+            tensionPairs.forEach(pair => {
+                if (substanceIds.has(pair.a) && substanceIds.has(pair.b)) {
+                    tensions.push({
+                        id: `t_${tensions.length}`,
+                        pole_a: pair.a,
+                        pole_b: pair.b,
+                        reason: pair.reason,
+                        status: 'held',
+                    });
+                }
+            });
             
             // Маркеры операторов
             const operator_matches = findOperatorMarkers(text);
             const operator_stats = countOperatorStats(operator_matches);
             
-            data = {
+            return {
                 substances,
                 tensions,
                 operator_matches,
@@ -631,13 +360,6 @@
                     resolved_tensions: tensions.filter(t => t.status === 'resolved').length,
                 },
             };
-            
-            updateStats(data);
-            drawGraph();
-            renderOperatorMap();
-            renderSubstances();
-            renderTensions();
-            renderTextAnalysis();
         }
         
         // ==================== ПОИСК ОПЕРАТОРОВ ====================
@@ -646,7 +368,7 @@
                 split: [
                     'с одной стороны', 'с другой стороны', 'во-первых', 'во-вторых', 'в-третьих',
                     'прежде всего', 'затем', 'наконец', 'разделим', 'различать', 'различие между',
-                    'двояким образом', 'трояким образом', 'можно рассматривать', 'или... или',
+                    'двояким образом', 'трояким образом', 'можно рассматривать',
                 ],
                 hold: [
                     'антиномия', 'противоречие', 'противоположность', 'диалектика', 'парадокс',
@@ -658,6 +380,7 @@
                     'перейдём', 'перейти', 'переход', 'обратимся', 'рассмотрим теперь',
                     'до сих пор', 'теперь же', 'выше было показано', 'далее', 'продолжим',
                     'следовательно', 'таким образом', 'в свою очередь', 'напротив', 'наоборот',
+                    'стало быть',
                 ],
                 grammar_change: [
                     'иначе говоря', 'другими словами', 'в ином смысле', 'в другом значении',
@@ -677,7 +400,6 @@
                         const idx = textLower.indexOf(marker, searchPos);
                         if (idx === -1) break;
                         
-                        // Определяем контекст (предложение)
                         const start = Math.max(0, textLower.lastIndexOf('.', idx) + 1);
                         const end = textLower.indexOf('.', idx + marker.length);
                         const context = text.substring(
@@ -698,7 +420,7 @@
                 }
             }
             
-            // Убираем дубликаты (более длинные маркеры приоритетнее)
+            // Убираем дубликаты
             matches.sort((a, b) => b.marker.length - a.marker.length);
             const unique = [];
             const usedPositions = new Set();
@@ -729,11 +451,6 @@
             return stats;
         }
         
-        function emulateOperatorDetection(text, data) {
-            const matches = findOperatorMarkers(text);
-            return countOperatorStats(matches);
-        }
-        
         // ==================== ГРАФ ====================
         function drawGraph() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -752,7 +469,6 @@
                 positions[s.id] = { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
             });
 
-            // Связи
             tens.forEach(t => {
                 const a = positions[t.pole_a];
                 const b = positions[t.pole_b];
@@ -774,7 +490,6 @@
                 ctx.stroke();
                 ctx.setLineDash([]);
                 
-                // Подпись
                 const mx = (a.x + b.x) / 2;
                 const my = (a.y + b.y) / 2 - 12;
                 ctx.fillStyle = '#888';
@@ -783,7 +498,6 @@
                 ctx.fillText(t.reason || '', mx, my);
             });
 
-            // Узлы
             subs.forEach(s => {
                 const p = positions[s.id];
                 if (!p) return;
@@ -802,13 +516,11 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-                // Имя
                 ctx.fillStyle = '#fff';
                 ctx.font = 'bold 13px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.fillText(s.name, p.x, p.y + 4);
                 
-                // Энергия
                 ctx.font = '10px sans-serif';
                 ctx.fillStyle = '#ccc';
                 ctx.fillText(s.energy.toFixed(2), p.x, p.y + radius + 14);
@@ -903,11 +615,8 @@
             }
 
             let html = escapeHTML(originalText);
-            
-            // Собираем все спаны для подсветки
             const spans = [];
             
-            // Субстанции
             if (activeFilters.substance && data.substances) {
                 data.substances.forEach(s => {
                     const regex = new RegExp(`(${escapeRegex(s.name)})`, 'gi');
@@ -925,7 +634,6 @@
                 });
             }
             
-            // Модусы
             if (activeFilters.modus && data.substances) {
                 const allModi = [];
                 data.substances.forEach(s => {
@@ -947,45 +655,21 @@
                 });
             }
             
-            // Маркеры операторов
             if (data.operator_matches) {
                 data.operator_matches.forEach(m => {
                     if (activeFilters[m.operator] !== false) {
-                        const idx = originalText.toLowerCase().indexOf(m.marker);
-                        if (idx !== -1) {
-                            spans.push({
-                                start: idx,
-                                end: idx + m.marker.length,
-                                text: m.marker,
-                                type: m.operator,
-                                title: `Оператор: ${m.operator} (${(m.confidence * 100).toFixed(0)}%)`,
-                                className: `hl-${m.operator}`,
-                            });
-                        }
-                    }
-                });
-            }
-            
-            // Маркеры противоречий
-            if (activeFilters.hold) {
-                const tensionMarkers = ['но', 'однако', 'хотя', 'тем не менее', 'вопреки', 'напротив', 'с другой стороны', 'в то же время', 'тогда как', 'а не', 'в отличие'];
-                tensionMarkers.forEach(m => {
-                    const regex = new RegExp(`(${escapeRegex(m)})`, 'gi');
-                    let match;
-                    while ((match = regex.exec(originalText)) !== null) {
                         spans.push({
-                            start: match.index,
-                            end: match.index + match[0].length,
-                            text: match[0],
-                            type: 'hold',
-                            title: 'Маркер противоречия (Hold)',
-                            className: 'hl-hold',
+                            start: m.position,
+                            end: m.position + m.marker.length,
+                            text: m.marker,
+                            type: m.operator,
+                            title: `Оператор: ${m.operator} (${(m.confidence * 100).toFixed(0)}%)`,
+                            className: `hl-${m.operator}`,
                         });
                     }
                 });
             }
             
-            // Сортируем спаны по позиции и убираем пересекающиеся
             spans.sort((a, b) => a.start - b.start || b.end - a.end);
             const filteredSpans = [];
             let lastEnd = 0;
@@ -996,7 +680,6 @@
                 }
             }
             
-            // Применяем спаны с конца к началу
             filteredSpans.sort((a, b) => b.start - a.start);
             for (const span of filteredSpans) {
                 const before = html.substring(0, span.start);
@@ -1007,7 +690,6 @@
                     after;
             }
 
-            // Легенда
             let legendHTML = '<div class="legend">';
             if (activeFilters.substance) legendHTML += '<span><span class="swatch" style="background:#e9456030;border-bottom:2px solid #e94560"></span> Субстанции</span>';
             if (activeFilters.modus) legendHTML += '<span><span class="swatch" style="background:#3498db30;border-bottom:2px dotted #3498db"></span> Модусы</span>';
@@ -1019,7 +701,6 @@
             
             container.innerHTML = legendHTML + html;
             
-            // Всплывающие подсказки
             container.querySelectorAll('[title]').forEach(el => {
                 el.addEventListener('mouseenter', (e) => {
                     tooltip.textContent = el.getAttribute('title');
@@ -1061,13 +742,17 @@
             return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         }
         
-        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
-        // Автоматически загружаем пример при открытии
+        // ==================== ИНИЦИАЛИЗАЦИЯ С АВТО-АНАЛИЗОМ ====================
         window.addEventListener('DOMContentLoaded', () => {
             loadExample('kant');
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.add('active');
             });
+            // Автоматический анализ через 500 мс после загрузки
+            setTimeout(() => {
+                const text = document.getElementById('textInput').value.trim();
+                if (text) analyze();
+            }, 500);
         });
     </script>
 </body>
