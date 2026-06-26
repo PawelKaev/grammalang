@@ -5,56 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GrammaLang — Анализатор философского текста v2.0</title>
     <style>
-        :root {
-            --bg: #1a1a2e;
-            --surface: #16213e;
-            --border: #0f3460;
-            --accent: #e94560;
-            --text: #eee;
-            --muted: #888;
-            --split: #44CC44;
-            --hold: #FF8800;
-            --transition: #AA44FF;
-            --grammar_change: #00BBBB;
-            --substance: #e94560;
-            --modus: #3498db;
-            --tension: #f39c12;
-        }
-        
+        :root { --bg: #1a1a2e; --surface: #16213e; --border: #0f3460; --accent: #e94560; --text: #eee; --muted: #888; --split: #44CC44; --hold: #FF8800; --transition: #AA44FF; --grammar_change: #00BBBB; --substance: #e94560; --modus: #3498db; --tension: #f39c12; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; }
-        
         .panel { width: 420px; min-width: 420px; background: var(--surface); display: flex; flex-direction: column; border-right: 2px solid var(--border); }
         .panel-header { padding: 20px; border-bottom: 1px solid var(--border); }
         .panel-header h1 { font-size: 24px; color: var(--accent); margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
         .panel-header h1 .version { font-size: 11px; background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 10px; }
         .panel-header p { font-size: 12px; color: var(--muted); }
         .panel-body { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
-        
         .file-upload { display: flex; gap: 8px; align-items: center; }
         .file-upload input[type="file"] { display: none; }
-        .file-upload label { 
-            flex: 1; padding: 10px; background: transparent; color: var(--accent); 
-            border: 1px dashed var(--accent); border-radius: 5px; cursor: pointer; 
-            text-align: center; font-size: 13px; transition: 0.2s;
-        }
+        .file-upload label { flex: 1; padding: 10px; background: transparent; color: var(--accent); border: 1px dashed var(--accent); border-radius: 5px; cursor: pointer; text-align: center; font-size: 13px; transition: 0.2s; }
         .file-upload label:hover { background: #e9456010; }
         .file-info { font-size: 11px; color: var(--muted); text-align: center; display: none; }
         .file-info.show { display: block; }
-        
-        textarea { 
-            flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); 
-            border-radius: 5px; padding: 15px; font-family: 'Times New Roman', serif; 
-            font-size: 15px; line-height: 1.7; resize: none; min-height: 160px; 
-        }
+        textarea { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 5px; padding: 15px; font-family: 'Times New Roman', serif; font-size: 15px; line-height: 1.7; resize: none; min-height: 160px; }
         textarea:focus { outline: none; border-color: var(--accent); }
-        
         .filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
-        .filter-btn { 
-            padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border); 
-            background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; 
-            transition: 0.2s; white-space: nowrap; 
-        }
+        .filter-btn { padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; transition: 0.2s; white-space: nowrap; }
         .filter-btn:hover { border-color: var(--text); color: var(--text); }
         .filter-btn.active { color: #fff; font-weight: 600; }
         .filter-btn[data-type="substance"].active { background: var(--substance); border-color: var(--substance); }
@@ -63,28 +32,17 @@
         .filter-btn[data-type="hold"].active { background: var(--hold); border-color: var(--hold); }
         .filter-btn[data-type="transition"].active { background: var(--transition); border-color: var(--transition); }
         .filter-btn[data-type="grammar_change"].active { background: var(--grammar_change); border-color: var(--grammar_change); }
-        
         .buttons { display: flex; gap: 10px; }
-        button { 
-            flex: 1; padding: 12px; border: none; border-radius: 5px; cursor: pointer; 
-            font-size: 14px; font-weight: 600; transition: 0.2s; 
-        }
+        button { flex: 1; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.2s; }
         .btn-analyze { background: var(--accent); color: #fff; }
         .btn-analyze:hover { background: #c23152; }
         .btn-analyze:disabled { background: #555; cursor: not-allowed; }
         .btn-clear { background: var(--border); color: #fff; }
         .btn-clear:hover { background: #1a4a7a; }
-        .btn-example { 
-            background: transparent; color: var(--accent); border: 1px solid var(--accent); 
-            font-size: 12px; padding: 8px; flex: none; 
-        }
+        .btn-example { background: transparent; color: var(--accent); border: 1px solid var(--accent); font-size: 12px; padding: 8px; flex: none; }
         .btn-example:hover { background: #e9456020; }
-        
         .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .stat { 
-            background: var(--bg); padding: 10px; border-radius: 5px; text-align: center; 
-            border: 1px solid var(--border); 
-        }
+        .stat { background: var(--bg); padding: 10px; border-radius: 5px; text-align: center; border: 1px solid var(--border); }
         .stat .num { font-size: 22px; font-weight: 700; }
         .stat .num.substance-c { color: var(--substance); }
         .stat .num.modus-c { color: var(--modus); }
@@ -93,122 +51,53 @@
         .stat .num.transition-c { color: var(--transition); }
         .stat .num.grammar-c { color: var(--grammar_change); }
         .stat .label { font-size: 10px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .style-indicator { 
-            background: var(--bg); border: 1px solid var(--border); border-radius: 5px; 
-            padding: 10px 14px; font-size: 13px; display: none; 
-        }
+        .style-indicator { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 10px 14px; font-size: 13px; display: none; }
         .style-indicator.show { display: block; }
         .style-indicator .style-name { color: var(--accent); font-weight: 600; }
-        
         .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-        
         .tabs { display: flex; background: var(--surface); border-bottom: 2px solid var(--border); overflow-x: auto; }
-        .tab { 
-            padding: 12px 20px; cursor: pointer; font-size: 13px; color: var(--muted); 
-            border-bottom: 2px solid transparent; margin-bottom: -2px; transition: 0.2s; 
-            white-space: nowrap; 
-        }
+        .tab { padding: 12px 20px; cursor: pointer; font-size: 13px; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: 0.2s; white-space: nowrap; }
         .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
         .tab:hover { color: #fff; }
         .tab-content { flex: 1; position: relative; overflow: hidden; }
         .tab-pane { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
         .tab-pane.active { display: flex; flex-direction: column; }
-        
         #graphCanvas { width: 100%; height: 100%; }
-        .graph-legend {
-            position: absolute; bottom: 10px; right: 10px; background: rgba(22, 33, 62, 0.95);
-            border-radius: 8px; padding: 10px 14px; font-size: 11px; z-index: 10;
-            border: 1px solid var(--border);
-        }
+        .graph-legend { position: absolute; bottom: 10px; right: 10px; background: rgba(22,33,62,0.95); border-radius: 8px; padding: 10px 14px; font-size: 11px; z-index: 10; border: 1px solid var(--border); }
         .graph-legend .leg-item { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
         .graph-legend .leg-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
-        
         .substance-list, .tension-list, .text-analysis { padding: 20px; overflow-y: auto; height: 100%; }
-        .substance-card { 
-            background: var(--surface); border: 1px solid var(--border); border-radius: 8px; 
-            padding: 15px; margin-bottom: 10px; 
-        }
+        .substance-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 10px; }
         .substance-card h3 { color: var(--accent); margin-bottom: 5px; }
         .substance-card .energy-bar { height: 8px; background: var(--border); border-radius: 4px; margin: 8px 0; overflow: hidden; }
-        .substance-card .energy-fill { 
-            height: 100%; background: linear-gradient(90deg, var(--modus), var(--accent)); 
-            border-radius: 4px; transition: width 0.5s; 
-        }
+        .substance-card .energy-fill { height: 100%; background: linear-gradient(90deg, var(--modus), var(--accent)); border-radius: 4px; transition: width 0.5s; }
         .substance-card .modi { font-size: 12px; color: #aaa; }
         .substance-card .modi span { color: var(--accent); }
-        
-        .tension-card { 
-            background: var(--surface); border: 1px solid var(--border); border-radius: 8px; 
-            padding: 12px 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; 
-        }
+        .tension-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
         .tension-card .status { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
         .tension-card .status.held { background: var(--accent); animation: pulse 1s infinite; }
         .tension-card .status.resolved { background: #2ecc71; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
         .tension-card .info { flex: 1; }
         .tension-card .info strong { color: var(--accent); }
         .tension-card .info .reason { font-size: 11px; color: var(--muted); }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-        
         .text-analysis { font-family: 'Times New Roman', serif; font-size: 16px; line-height: 1.8; }
-        .text-analysis .hl-substance { 
-            background: #e9456030; padding: 2px 4px; border-radius: 3px; 
-            border-bottom: 2px solid var(--substance); cursor: pointer; 
-        }
-        .text-analysis .hl-modus { 
-            background: #3498db30; padding: 2px 4px; border-radius: 3px; 
-            border-bottom: 2px dotted var(--modus); cursor: pointer; 
-        }
-        .text-analysis .hl-hold { 
-            background: #FF880030; padding: 2px 4px; border-radius: 3px; 
-            border-bottom: 2px dashed var(--hold); cursor: pointer; 
-        }
-        .text-analysis .hl-split { 
-            background: #44CC4430; padding: 2px 4px; border-radius: 3px; 
-            border-bottom: 2px solid var(--split); cursor: pointer; 
-        }
-        .text-analysis .hl-transition { 
-            background: #AA44FF30; padding: 2px 4px; border-radius: 3px; 
-            border-bottom: 2px dotted var(--transition); cursor: pointer; 
-        }
-        .text-analysis .hl-grammar_change { 
-            background: #00BBBB30; padding: 2px 4px; border-radius: 3px; 
-            border-bottom: 2px dashed var(--grammar_change); cursor: pointer; 
-        }
-        .text-analysis .legend { 
-            margin-bottom: 15px; font-size: 12px; font-family: sans-serif; 
-            display: flex; gap: 15px; flex-wrap: wrap; 
-        }
+        .text-analysis .hl-substance { background: #e9456030; padding: 2px 4px; border-radius: 3px; border-bottom: 2px solid var(--substance); cursor: pointer; }
+        .text-analysis .hl-modus { background: #3498db30; padding: 2px 4px; border-radius: 3px; border-bottom: 2px dotted var(--modus); cursor: pointer; }
+        .text-analysis .hl-hold { background: #FF880030; padding: 2px 4px; border-radius: 3px; border-bottom: 2px dashed var(--hold); cursor: pointer; }
+        .text-analysis .hl-split { background: #44CC4430; padding: 2px 4px; border-radius: 3px; border-bottom: 2px solid var(--split); cursor: pointer; }
+        .text-analysis .hl-transition { background: #AA44FF30; padding: 2px 4px; border-radius: 3px; border-bottom: 2px dotted var(--transition); cursor: pointer; }
+        .text-analysis .hl-grammar_change { background: #00BBBB30; padding: 2px 4px; border-radius: 3px; border-bottom: 2px dashed var(--grammar_change); cursor: pointer; }
+        .text-analysis .legend { margin-bottom: 15px; font-size: 12px; font-family: sans-serif; display: flex; gap: 15px; flex-wrap: wrap; }
         .text-analysis .legend span { display: inline-flex; align-items: center; gap: 5px; }
         .text-analysis .legend .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; }
-        
-        .tooltip {
-            position: fixed; background: #2a2a3a; border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 8px; padding: 10px 14px; pointer-events: none; z-index: 1000;
-            max-width: 280px; font-size: 13px; line-height: 1.5; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            display: none;
-        }
-        
-        .loading { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            text-align: center; color: var(--muted); z-index: 20; 
-        }
-        .loading .spinner { 
-            width: 40px; height: 40px; border: 3px solid var(--border); 
-            border-top-color: var(--accent); border-radius: 50%; 
-            animation: spin 1s linear infinite; margin: 0 auto 15px; 
-        }
+        .tooltip { position: fixed; background: #2a2a3a; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 10px 14px; pointer-events: none; z-index: 1000; max-width: 280px; font-size: 13px; line-height: 1.5; box-shadow: 0 4px 20px rgba(0,0,0,0.5); display: none; }
+        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; color: var(--muted); z-index: 20; display: none; }
+        .loading .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
         .operator-map { padding: 20px; overflow-y: auto; height: 100%; }
-        .operator-card {
-            background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-            padding: 12px 15px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start;
-        }
-        .operator-card .op-icon {
-            width: 36px; height: 36px; border-radius: 50%; display: flex;
-            align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
-        }
+        .operator-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 15px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start; }
+        .operator-card .op-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
         .operator-card .op-icon.split { background: #44CC4430; color: var(--split); }
         .operator-card .op-icon.hold { background: #FF880030; color: var(--hold); }
         .operator-card .op-icon.transition { background: #AA44FF30; color: var(--transition); }
@@ -231,32 +120,24 @@
                 <label for="fileInput">📂 Загрузить главу (.txt)</label>
             </div>
             <div class="file-info" id="fileInfo"></div>
-            
             <div style="display:flex;gap:6px;">
                 <button class="btn-example" onclick="loadExample('kant')">📖 Кант (фрагмент)</button>
                 <button class="btn-example" onclick="loadExample('kant_full')">📚 Кант (глава)</button>
             </div>
-            
-            <textarea id="textInput" placeholder="Введите философский текст для анализа...&#10;&#10;Поддерживается загрузка целых глав.&#10;Будут найдены: субстанции, модусы, противоречия&#10;и маркеры операторов: Split, Hold, Transition, Grammar Change."></textarea>
-            
+            <textarea id="textInput" placeholder="Введите философский текст для анализа..."></textarea>
             <div class="filter-row">
-                <button class="filter-btn active" data-type="substance" onclick="toggleFilter('substance', this)">🧬 Субстанции</button>
-                <button class="filter-btn active" data-type="modus" onclick="toggleFilter('modus', this)">🔧 Модусы</button>
-                <button class="filter-btn active" data-type="split" onclick="toggleFilter('split', this)">✂️ Split</button>
-                <button class="filter-btn active" data-type="hold" onclick="toggleFilter('hold', this)">⚡ Hold</button>
-                <button class="filter-btn active" data-type="transition" onclick="toggleFilter('transition', this)">🔄 Transition</button>
-                <button class="filter-btn active" data-type="grammar_change" onclick="toggleFilter('grammar_change', this)">🔀 Grammar Ch.</button>
+                <button class="filter-btn active" data-type="substance" onclick="toggleFilter('substance',this)">🧬 Субстанции</button>
+                <button class="filter-btn active" data-type="modus" onclick="toggleFilter('modus',this)">🔧 Модусы</button>
+                <button class="filter-btn active" data-type="split" onclick="toggleFilter('split',this)">✂️ Split</button>
+                <button class="filter-btn active" data-type="hold" onclick="toggleFilter('hold',this)">⚡ Hold</button>
+                <button class="filter-btn active" data-type="transition" onclick="toggleFilter('transition',this)">🔄 Transition</button>
+                <button class="filter-btn active" data-type="grammar_change" onclick="toggleFilter('grammar_change',this)">🔀 Grammar Ch.</button>
             </div>
-            
             <div class="buttons">
                 <button class="btn-analyze" id="btnAnalyze" onclick="analyze()">▶ Анализ</button>
                 <button class="btn-clear" onclick="clearAll()">✕ Очистить</button>
             </div>
-            
-            <div class="style-indicator" id="styleIndicator">
-                🎯 Доминирующий стиль: <span class="style-name" id="styleName"></span>
-            </div>
-            
+            <div class="style-indicator" id="styleIndicator">🎯 Доминирующий стиль: <span class="style-name" id="styleName"></span></div>
             <div class="stats" id="stats">
                 <div class="stat"><div class="num substance-c" id="statSubstances">0</div><div class="label">Субстанции</div></div>
                 <div class="stat"><div class="num modus-c" id="statModus">0</div><div class="label">Модусы</div></div>
@@ -267,7 +148,6 @@
             </div>
         </div>
     </div>
-
     <div class="main">
         <div class="tabs">
             <div class="tab active" onclick="switchTab('graph')">◉ Граф онтологии</div>
@@ -281,529 +161,142 @@
                 <canvas id="graphCanvas"></canvas>
                 <div class="graph-legend">
                     <div class="leg-item"><span class="leg-swatch" style="background:var(--substance)"></span> Субстанция</div>
-                    <div class="leg-item"><span class="leg-swatch" style="background:var(--hold)"></span> Held (удерживается)</div>
-                    <div class="leg-item"><span class="leg-swatch" style="background:#2ecc71"></span> Resolved (разрешено)</div>
+                    <div class="leg-item"><span class="leg-swatch" style="background:var(--hold)"></span> Held</div>
+                    <div class="leg-item"><span class="leg-swatch" style="background:#2ecc71"></span> Resolved</div>
                 </div>
-                <div class="loading" id="loading">
-                    <div class="spinner"></div>
-                    <div>Анализ текста...</div>
-                </div>
+                <div class="loading" id="loading"><div class="spinner"></div><div>Анализ текста...</div></div>
             </div>
-            
-            <div class="tab-pane" id="tab-operators">
-                <div class="operator-map" id="operatorMap"></div>
-            </div>
-            
-            <div class="tab-pane" id="tab-substances">
-                <div class="substance-list" id="substanceList"></div>
-            </div>
-            
-            <div class="tab-pane" id="tab-tensions">
-                <div class="tension-list" id="tensionList"></div>
-            </div>
-            
-            <div class="tab-pane" id="tab-text">
-                <div class="text-analysis" id="textAnalysis"></div>
-            </div>
+            <div class="tab-pane" id="tab-operators"><div class="operator-map" id="operatorMap"></div></div>
+            <div class="tab-pane" id="tab-substances"><div class="substance-list" id="substanceList"></div></div>
+            <div class="tab-pane" id="tab-tensions"><div class="tension-list" id="tensionList"></div></div>
+            <div class="tab-pane" id="tab-text"><div class="text-analysis" id="textAnalysis"></div></div>
         </div>
     </div>
-    
     <div class="tooltip" id="tooltip"></div>
+<script>
+let data=null,originalText='';
+let activeFilters={substance:true,modus:true,split:true,hold:true,transition:true,grammar_change:true};
+const canvas=document.getElementById('graphCanvas'),ctx=canvas.getContext('2d');
+const loading=document.getElementById('loading'),tooltip=document.getElementById('tooltip');
+loading.style.display='none';
 
-    <script>
-        let data = null;
-        let originalText = '';
-        let activeFilters = {
-            substance: true,
-            modus: true,
-            split: true,
-            hold: true,
-            transition: true,
-            grammar_change: true,
-        };
-        
-        const canvas = document.getElementById('graphCanvas');
-        const ctx = canvas.getContext('2d');
-        const loading = document.getElementById('loading');
-        const tooltip = document.getElementById('tooltip');
-        loading.style.display = 'none';
-        
-        function resize() {
-            const container = canvas.parentElement;
-            if (!container) return;
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
-            if (data) drawGraph();
-        }
-        window.addEventListener('resize', resize);
-        resize();
-        
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const info = document.getElementById('fileInfo');
-            info.textContent = `📄 ${file.name} (${(file.size / 1024).toFixed(1)} КБ)`;
-            info.classList.add('show');
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                document.getElementById('textInput').value = ev.target.result;
-                setTimeout(() => analyze(), 300);
-            };
-            reader.readAsText(file);
-        });
-        
-        function loadExample(type) {
-            if (type === 'kant') {
-                document.getElementById('textInput').value = 
-                    'Разум видит только то, что сам создаёт по собственному плану. ' +
-                    'Он должен идти впереди с принципами своих суждений по постоянным законам ' +
-                    'и заставлять природу отвечать на его вопросы, а не тащиться у неё на поводу. ' +
-                    'Но случайные наблюдения, производимые без предварительного плана, ' +
-                    'не связаны необходимым законом, тогда как разум ищет и нуждается в таком законе.';
-            } else if (type === 'kant_full') {
-                document.getElementById('textInput').value = 
-                    'ТРАНСЦЕНДЕНТАЛЬНОГО УЧЕНИЯ О НАЧАЛАХ\n' +
-                    'ЧАСТЬ ВТОРАЯ. ТРАНСЦЕНДЕНТАЛЬНАЯ ЛОГИКА\n\n' +
-                    'ВВЕДЕНИЕ. Идея трансцендентальной логики\n\n' +
-                    'I. О логике вообще\n\n' +
-                    'Наше знание возникает из двух основных источников души: первый есть способность ' +
-                    'получать представления (восприимчивость к впечатлениям), а второй — способность ' +
-                    'познавать через эти представления предмет (спонтанность понятий). ' +
-                    'Посредством первого предмет нам даётся, а посредством второго он мыслится ' +
-                    'в отношении к представлению. Созерцания и понятия суть, следовательно, ' +
-                    'начала всякого нашего познания, так что ни понятия без соответствующего ' +
-                    'им некоторым образом созерцания, ни созерцание без понятий не могут дать знание.\n\n' +
-                    'И те и другие или чистые, или эмпирические. Эмпирическими они называются тогда, ' +
-                    'когда в них содержится ощущение (которое предполагает действительное присутствие ' +
-                    'предмета). Чистыми же — тогда, когда к представлению не примешивается ощущение. ' +
-                    'Поэтому чистое созерцание содержит только форму, при которой нечто созерцается, ' +
-                    'а чистое понятие — только форму мышления о предмете вообще. ' +
-                    'Только чистые созерцания или чистые понятия возможны a priori, ' +
-                    'эмпирические же — только a posteriori.\n\n' +
-                    'Способность же получать представления мы называем чувственностью, так что объекты ' +
-                    'даются нам через чувственность, и только она даёт нам созерцания; ' +
-                    'рассудком же объекты мыслятся, и из него возникают понятия. ' +
-                    'Но всякое мышление должно в конце концов прямо или косвенно ' +
-                    'иметь отношение к созерцаниям, стало быть, у нас — к чувственности, ' +
-                    'так как ни один предмет не может быть нам дан иным способом.';
-            }
-            setTimeout(() => analyze(), 200);
-        }
-        
-        function toggleFilter(type, btn) {
-            activeFilters[type] = !activeFilters[type];
-            btn.classList.toggle('active', activeFilters[type]);
-            if (data) {
-                renderTextAnalysis();
-                drawGraph();
-                renderOperatorMap();
-            }
-        }
-        
-        function clearAll() {
-            document.getElementById('textInput').value = '';
-            document.getElementById('fileInfo').classList.remove('show');
-            document.getElementById('fileInput').value = '';
-            document.getElementById('styleIndicator').classList.remove('show');
-            data = null;
-            originalText = '';
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            document.getElementById('substanceList').innerHTML = '';
-            document.getElementById('tensionList').innerHTML = '';
-            document.getElementById('textAnalysis').innerHTML = '';
-            document.getElementById('operatorMap').innerHTML = '';
-            resetStats();
-        }
-        
-        function resetStats() {
-            ['statSubstances','statModus','statSplit','statHold','statTransition','statGrammar'].forEach(id => {
-                document.getElementById(id).textContent = '0';
-            });
-        }
-        
-        function updateStats(result) {
-            resetStats();
-            if (!result) return;
-            const s = result.stats || {};
-            document.getElementById('statSubstances').textContent = s.total_substances || 0;
-            let modusCount = 0;
-            if (result.substances) {
-                result.substances.forEach(sub => {
-                    if (sub.modi) modusCount += sub.modi.length;
-                });
-            }
-            document.getElementById('statModus').textContent = modusCount;
-            const ops = result.operator_stats || {};
-            document.getElementById('statSplit').textContent = ops.split || 0;
-            document.getElementById('statHold').textContent = ops.hold || 0;
-            document.getElementById('statTransition').textContent = ops.transition || 0;
-            document.getElementById('statGrammar').textContent = ops.grammar_change || 0;
-            
-            const opEntries = [
-                {name: 'split', count: ops.split || 0, style: 'Структурный / аналитический', icon: '✂️'},
-                {name: 'hold', count: ops.hold || 0, style: 'Диалектический / проблематизирующий', icon: '⚡'},
-                {name: 'transition', count: ops.transition || 0, style: 'Переходный / синтезирующий', icon: '🔄'},
-                {name: 'grammar_change', count: ops.grammar_change || 0, style: 'Рефлексивный / мета-уровневый', icon: '🔀'},
-            ];
-            opEntries.sort((a, b) => b.count - a.count);
-            if (opEntries[0].count > 0) {
-                const indicator = document.getElementById('styleIndicator');
-                indicator.classList.add('show');
-                document.getElementById('styleName').textContent = `${opEntries[0].icon} ${opEntries[0].style}`;
-            }
-        }
-        
-        function isWordBoundary(text, index, marker) {
-            const charBefore = index > 0 ? text[index - 1] : ' ';
-            const charAfter = index + marker.length < text.length ? text[index + marker.length] : ' ';
-            return /[\s,.;:!?()«»—"'-]/.test(charBefore) || charBefore === ' ' || index === 0 
-                ? (/[\s,.;:!?()«»—"'-]/.test(charAfter) || charAfter === ' ' || index + marker.length === text.length)
-                : false;
-        }
-        
-        async function analyze() {
-            const text = document.getElementById('textInput').value.trim();
-            if (!text) return;
-            originalText = text;
-            const btn = document.getElementById('btnAnalyze');
-            btn.disabled = true;
-            btn.textContent = '⏳ Анализ...';
-            loading.style.display = 'block';
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2000);
-            
-            try {
-                const response = await fetch('http://localhost:8080/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text }),
-                    signal: controller.signal,
-                });
-                clearTimeout(timeoutId);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const serverData = await response.json();
-                if (!serverData.operator_stats) {
-                    serverData.operator_matches = findOperatorMarkers(text);
-                    serverData.operator_stats = countOperatorStats(serverData.operator_matches);
-                }
-                if (!serverData.operator_matches) {
-                    serverData.operator_matches = findOperatorMarkers(text);
-                }
-                data = serverData;
-            } catch (e) {
-                clearTimeout(timeoutId);
-                console.log('Автономный режим (сервер недоступен)');
-                data = performLocalAnalysis(text);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '▶ Анализ';
-                loading.style.display = 'none';
-                if (data) {
-                    updateStats(data);
-                    drawGraph();
-                    renderOperatorMap();
-                    renderSubstances();
-                    renderTensions();
-                    renderTextAnalysis();
-                }
-            }
-        }
-        
-        function performLocalAnalysis(text) {
-            const substances = [];
-            const substanceIds = new Set();
-            const categories = [
-                {word: 'разум', name: 'Разум', energy: 0.90},
-                {word: 'рассудок', name: 'Рассудок', energy: 0.85},
-                {word: 'чувственность', name: 'Чувственность', energy: 0.70},
-                {word: 'созерцание', name: 'Созерцание', energy: 0.75},
-                {word: 'понятие', name: 'Понятие', energy: 0.70},
-                {word: 'природа', name: 'Природа', energy: 0.60},
-                {word: 'свобода', name: 'Свобода', energy: 0.85},
-                {word: 'необходимость', name: 'Необходимость', energy: 0.50},
-                {word: 'явление', name: 'Явление', energy: 0.60},
-                {word: 'феномен', name: 'Феномен', energy: 0.55},
-                {word: 'ноумен', name: 'Ноумен', energy: 0.65},
-                {word: 'предмет', name: 'Предмет', energy: 0.55},
-                {word: 'субстанция', name: 'Субстанция', energy: 0.70},
-                {word: 'причина', name: 'Причина', energy: 0.65},
-                {word: 'следствие', name: 'Следствие', energy: 0.50},
-                {word: 'пространство', name: 'Пространство', energy: 0.60},
-                {word: 'время', name: 'Время', energy: 0.65},
-                {word: 'единство', name: 'Единство', energy: 0.55},
-                {word: 'множество', name: 'Множество', energy: 0.50},
-                {word: 'реальность', name: 'Реальность', energy: 0.70},
-                {word: 'отрицание', name: 'Отрицание', energy: 0.55},
-                {word: 'возможность', name: 'Возможность', energy: 0.60},
-                {word: 'действительность', name: 'Действительность', energy: 0.65},
-                {word: 'мораль', name: 'Мораль', energy: 0.55},
-                {word: 'долг', name: 'Долг', energy: 0.60},
-                {word: 'воля', name: 'Воля', energy: 0.70},
-                {word: 'закон', name: 'Закон', energy: 0.65},
-                {word: 'знание', name: 'Знание', energy: 0.75},
-            ];
-            const textLower = text.toLowerCase();
-            categories.forEach(cat => {
-                if (textLower.includes(cat.word)) {
-                    const count = (textLower.match(new RegExp(cat.word, 'g')) || []).length;
-                    const adjustedEnergy = Math.min(1.0, cat.energy + (count - 1) * 0.05);
-                    substances.push({ id: cat.word, name: cat.name, energy: adjustedEnergy, modi: [] });
-                    substanceIds.add(cat.word);
-                }
-            });
-            
-            const modusPatterns = [
-                {verb: 'мыслит', subject: 'разум'},{verb: 'мыслиться', subject: 'понятие'},
-                {verb: 'мышление', subject: 'разум'},{verb: 'даётся', subject: 'предмет'},
-                {verb: 'даны', subject: 'предмет'},{verb: 'называем', subject: 'чувственность'},
-                {verb: 'называются', subject: 'созерцание'},{verb: 'возникают', subject: 'понятие'},
-                {verb: 'возникает', subject: 'знание'},{verb: 'создаёт', subject: 'разум'},
-                {verb: 'содержит', subject: 'созерцание'},{verb: 'содержится', subject: 'ощущение'},
-                {verb: 'познавать', subject: 'рассудок'},{verb: 'получать', subject: 'чувственность'},
-                {verb: 'предполагает', subject: 'ощущение'},{verb: 'созерцается', subject: 'предмет'},
-            ];
-            modusPatterns.forEach(mp => {
-                if (textLower.includes(mp.verb) && substanceIds.has(mp.subject)) {
-                    const sub = substances.find(s => s.id === mp.subject);
-                    if (sub && !sub.modi.some(m => m.value === mp.verb)) {
-                        sub.modi.push({name: mp.verb, value: mp.verb});
-                    }
-                }
-            });
-            
-            const tensions = [];
-            const tensionPairs = [
-                {a: 'разум', b: 'чувственность', reason: 'два источника познания'},
-                {a: 'созерцание', b: 'понятие', reason: 'начала познания'},
-                {a: 'свобода', b: 'необходимость', reason: 'антиномия'},
-                {a: 'явление', b: 'ноумен', reason: 'вещь сама по себе'},
-                {a: 'пространство', b: 'время', reason: 'формы созерцания'},
-                {a: 'единство', b: 'множество', reason: 'категории количества'},
-                {a: 'возможность', b: 'действительность', reason: 'категории модальности'},
-                {a: 'реальность', b: 'отрицание', reason: 'категории качества'},
-                {a: 'субстанция', b: 'причина', reason: 'категории отношения'},
-                {a: 'природа', b: 'свобода', reason: 'детерминизм vs спонтанность'},
-            ];
-            tensionPairs.forEach(pair => {
-                if (substanceIds.has(pair.a) && substanceIds.has(pair.b)) {
-                    tensions.push({ id: `t_${tensions.length}`, pole_a: pair.a, pole_b: pair.b, reason: pair.reason, status: 'held' });
-                }
-            });
-            
-            const operator_matches = findOperatorMarkers(text);
-            const operator_stats = countOperatorStats(operator_matches);
-            
-            return {
-                substances, tensions, operator_matches, operator_stats,
-                stats: {
-                    total_substances: substances.length,
-                    total_tensions: tensions.length,
-                    held_tensions: tensions.filter(t => t.status === 'held').length,
-                    resolved_tensions: tensions.filter(t => t.status === 'resolved').length,
-                },
-            };
-        }
-        
-        function findOperatorMarkers(text) {
-            const markers = {
-                split: ['с одной стороны','с другой стороны','во-первых','во-вторых','в-третьих','прежде всего','затем','наконец','разделим','различать','различие между','двояким образом','трояким образом','можно рассматривать'],
-                hold: ['антиномия','противоречие','противоположность','диалектика','парадокс','конфликт','столкновение','несовместимость','взаимоисключающий','но','однако','тем не менее','хотя','несмотря на','вопреки','в то же время','между тем','не может быть','невозможно'],
-                transition: ['перейдём','перейти','переход','обратимся','рассмотрим теперь','до сих пор','теперь же','выше было показано','далее','продолжим','следовательно','таким образом','в свою очередь','напротив','наоборот','стало быть'],
-                grammar_change: ['иначе говоря','другими словами','в ином смысле','в другом значении','переосмысление','с иной точки зрения','можно сказать иначе','то есть','а именно','иными словами','в сущности','по сути','строго говоря','собственно','в строгом смысле','в широком смысле'],
-            };
-            const matches = [];
-            const textLower = text.toLowerCase();
-            for (const [opType, markerList] of Object.entries(markers)) {
-                for (const marker of markerList) {
-                    let searchPos = 0;
-                    while (true) {
-                        const idx = textLower.indexOf(marker, searchPos);
-                        if (idx === -1) break;
-                        if (isWordBoundary(text, idx, marker)) {
-                            const start = Math.max(0, textLower.lastIndexOf('.', idx) + 1);
-                            const end = textLower.indexOf('.', idx + marker.length);
-                            const context = text.substring(start, end === -1 ? Math.min(text.length, start + 150) : end + 1).trim();
-                            matches.push({ operator: opType, marker: marker, position: idx, context: context.substring(0, 120), confidence: marker.length > 5 ? 0.9 : 0.6 });
-                        }
-                        searchPos = idx + marker.length;
-                    }
-                }
-            }
-            matches.sort((a, b) => b.marker.length - a.marker.length);
-            const unique = [];
-            const usedPositions = new Set();
-            for (const m of matches) {
-                const key = `${m.position}-${m.operator}`;
-                if (!usedPositions.has(key)) { usedPositions.add(key); unique.push(m); }
-            }
-            return unique;
-        }
-        
-        function countOperatorStats(matches) {
-            const stats = { split: 0, hold: 0, transition: 0, grammar_change: 0 };
-            const seen = new Set();
-            matches.forEach(m => {
-                const key = `${m.operator}-${m.marker}`;
-                if (!seen.has(key)) { seen.add(key); stats[m.operator] = (stats[m.operator] || 0) + 1; }
-            });
-            return stats;
-        }
-        
-        function drawGraph() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (!data || !data.substances || !data.substances.length) return;
-            const subs = data.substances;
-            const tens = data.tensions || [];
-            const positions = {};
-            const cx = canvas.width / 2, cy = canvas.height / 2;
-            const r = Math.min(cx, cy) * 0.38;
-            const n = subs.length;
-            subs.forEach((s, i) => {
-                const angle = (2 * Math.PI * i) / n - Math.PI / 2;
-                positions[s.id] = { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
-            });
-            tens.forEach(t => {
-                const a = positions[t.pole_a], b = positions[t.pole_b];
-                if (!a || !b) return;
-                ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-                if (t.status === 'held') { ctx.strokeStyle = '#e94560'; ctx.setLineDash([8, 4]); ctx.lineWidth = 3; }
-                else { ctx.strokeStyle = '#2ecc71'; ctx.setLineDash([]); ctx.lineWidth = 2; }
-                ctx.stroke(); ctx.setLineDash([]);
-                const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2 - 12;
-                ctx.fillStyle = '#888'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
-                ctx.fillText(t.reason || '', mx, my);
-            });
-            subs.forEach(s => {
-                const p = positions[s.id]; if (!p) return;
-                const radius = 18 + s.energy * 35;
-                const grad = ctx.createRadialGradient(p.x, p.y, radius * 0.3, p.x, p.y, radius);
-                grad.addColorStop(0, '#ff6b6b'); grad.addColorStop(0.5, s.energy > 0.5 ? '#e94560' : '#3498db'); grad.addColorStop(1, s.energy > 0.5 ? '#c23152' : '#2980b9');
-                ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI * 2); ctx.fillStyle = grad; ctx.fill();
-                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-                ctx.fillStyle = '#fff'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(s.name, p.x, p.y + 4);
-                ctx.font = '10px sans-serif'; ctx.fillStyle = '#ccc'; ctx.fillText(s.energy.toFixed(2), p.x, p.y + radius + 14);
-            });
-        }
-        
-        function renderOperatorMap() {
-            const container = document.getElementById('operatorMap');
-            if (!data || !data.operator_matches || !data.operator_matches.length) {
-                container.innerHTML = '<div style="color:#888;text-align:center;padding:40px;">Операторы не обнаружены. Попробуйте загрузить более объёмный текст.</div>'; return;
-            }
-            const filtered = data.operator_matches.filter(m => activeFilters[m.operator] !== false);
-            if (!filtered.length) { container.innerHTML = '<div style="color:#888;text-align:center;padding:40px;">Все операторы скрыты фильтрами.</div>'; return; }
-            const icons = { split: '✂️', hold: '⚡', transition: '🔄', grammar_change: '🔀' };
-            const names = { split: 'Split (разделение)', hold: 'Hold (удержание)', transition: 'Transition (переход)', grammar_change: 'Grammar Change (смена грамматики)' };
-            container.innerHTML = filtered.map(m => `
-                <div class="operator-card">
-                    <div class="op-icon ${m.operator}">${icons[m.operator] || '•'}</div>
-                    <div class="op-info">
-                        <div class="op-marker">${names[m.operator] || m.operator}</div>
-                        <div style="color:#fff;">Маркер: «${m.marker}»</div>
-                        <div class="op-context">…${m.context}…</div>
-                        <div class="op-confidence">Уверенность: ${(m.confidence * 100).toFixed(0)}%</div>
-                    </div>
-                </div>`).join('');
-        }
-        
-        function renderSubstances() {
-            const container = document.getElementById('substanceList');
-            if (!data || !data.substances || !data.substances.length) { container.innerHTML = '<div style="color:#888;text-align:center;padding:40px;">Нет данных</div>'; return; }
-            container.innerHTML = data.substances.map(s => `
-                <div class="substance-card">
-                    <h3>${s.name}</h3>
-                    <div style="font-size:12px;color:#888;">ID: ${s.id} | Энергия: ${s.energy.toFixed(2)}</div>
-                    <div class="energy-bar"><div class="energy-fill" style="width:${s.energy*100}%"></div></div>
-                    ${s.modi && s.modi.length ? `<div class="modi">Модусы: ${s.modi.map(m => `<span>${m.value}</span>`).join(', ')}</div>` : ''}
-                </div>`).join('');
-        }
-        
-        function renderTensions() {
-            const container = document.getElementById('tensionList');
-            if (!data || !data.tensions || !data.tensions.length) { container.innerHTML = '<div style="color:#888;text-align:center;padding:40px;">Противоречия не обнаружены</div>'; return; }
-            container.innerHTML = data.tensions.map(t => `
-                <div class="tension-card">
-                    <div class="status ${t.status}"></div>
-                    <div class="info"><strong>${t.pole_a}</strong> ↔ <strong>${t.pole_b}</strong>
-                    <div class="reason">${t.reason || ''} · ${t.status === 'held' ? 'Удерживается' : 'Разрешено'}</div></div>
-                </div>`).join('');
-        }
-        
-        function renderTextAnalysis() {
-            const container = document.getElementById('textAnalysis');
-            if (!originalText || !data) { container.innerHTML = '<div style="color:#888;">Нет данных для отображения</div>'; return; }
-            let html = escapeHTML(originalText);
-            const spans = [];
-            if (activeFilters.substance && data.substances) {
-                data.substances.forEach(s => {
-                    const regex = new RegExp(`(^|[\\s,.;:!?()«»—"'-])(${escapeRegex(s.name)})($|[\\s,.;:!?()«»—"'-])`, 'gi');
-                    let match;
-                    while ((match = regex.exec(originalText)) !== null) {
-                        spans.push({ start: match.index + match[1].length, end: match.index + match[1].length + match[2].length, text: match[2], type: 'substance', title: `Субстанция: ${s.name} (энергия: ${s.energy.toFixed(2)})`, className: 'hl-substance' });
-                    }
-                });
-            }
-            if (activeFilters.modus && data.substances) {
-                const allModi = []; data.substances.forEach(s => { if (s.modi) s.modi.forEach(m => allModi.push(m.value)); });
-                allModi.forEach(m => {
-                    const regex = new RegExp(`(^|[\\s,.;:!?()«»—"'-])(${escapeRegex(m)})($|[\\s,.;:!?()«»—"'-])`, 'gi');
-                    let match;
-                    while ((match = regex.exec(originalText)) !== null) {
-                        spans.push({ start: match.index + match[1].length, end: match.index + match[1].length + match[2].length, text: match[2], type: 'modus', title: 'Модус', className: 'hl-modus' });
-                    }
-                });
-            }
-            if (data.operator_matches) {
-                data.operator_matches.forEach(m => {
-                    if (activeFilters[m.operator] !== false && isWordBoundary(originalText, m.position, m.marker)) {
-                        spans.push({ start: m.position, end: m.position + m.marker.length, text: m.marker, type: m.operator, title: `Оператор: ${m.operator} (${(m.confidence * 100).toFixed(0)}%)`, className: `hl-${m.operator}` });
-                    }
-                });
-            }
-            spans.sort((a, b) => a.start - b.start || b.end - a.end);
-            const filteredSpans = []; let lastEnd = 0;
-            for (const span of spans) { if (span.start >= lastEnd) { filteredSpans.push(span); lastEnd = span.end; } }
-            filteredSpans.sort((a, b) => b.start - a.start);
-            for (const span of filteredSpans) {
-                html = html.substring(0, span.start) + `<span class="${span.className}" title="${escapeHTML(span.title)}">${html.substring(span.start, span.end)}</span>` + html.substring(span.end);
-            }
-            let legendHTML = '<div class="legend">';
-            if (activeFilters.substance) legendHTML += '<span><span class="swatch" style="background:#e9456030;border-bottom:2px solid #e94560"></span> Субстанции</span>';
-            if (activeFilters.modus) legendHTML += '<span><span class="swatch" style="background:#3498db30;border-bottom:2px dotted #3498db"></span> Модусы</span>';
-            if (activeFilters.hold) legendHTML += '<span><span class="swatch" style="background:#FF880030;border-bottom:2px dashed #f39c12"></span> Hold</span>';
-            if (activeFilters.split) legendHTML += '<span><span class="swatch" style="background:#44CC4430;border-bottom:2px solid #44CC44"></span> Split</span>';
-            if (activeFilters.transition) legendHTML += '<span><span class="swatch" style="background:#AA44FF30;border-bottom:2px dotted #AA44FF"></span> Transition</span>';
-            if (activeFilters.grammar_change) legendHTML += '<span><span class="swatch" style="background:#00BBBB30;border-bottom:2px dashed #00BBBB"></span> Grammar Ch.</span>';
-            legendHTML += '</div>';
-            container.innerHTML = legendHTML + html;
-            container.querySelectorAll('[title]').forEach(el => {
-                el.addEventListener('mouseenter', (e) => { tooltip.textContent = el.getAttribute('title'); tooltip.style.display = 'block'; tooltip.style.left = (e.pageX + 10) + 'px'; tooltip.style.top = (e.pageY - 30) + 'px'; });
-                el.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
-            });
-        }
-        
-        function switchTab(name) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-            const tabMap = { graph: 0, operators: 1, substances: 2, tensions: 3, text: 4 };
-            const idx = tabMap[name] !== undefined ? tabMap[name] : 0;
-            const tabs = document.querySelectorAll('.tab');
-            if (tabs[idx]) tabs[idx].classList.add('active');
-            const pane = document.getElementById(`tab-${name}`);
-            if (pane) pane.classList.add('active');
-            if (name === 'graph') { resize(); drawGraph(); }
-        }
-        
-        function escapeHTML(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
-        function escapeRegex(str) { return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-        
-        window.addEventListener('DOMContentLoaded', () => {
-            loadExample('kant');
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.add('active'));
-            setTimeout(() => { const text = document.getElementById('textInput').value.trim(); if (text) analyze(); }, 500);
-        });
-    </script>
+function resize(){const c=canvas.parentElement;if(!c)return;canvas.width=c.clientWidth;canvas.height=c.clientHeight;if(data)drawGraph();}
+window.addEventListener('resize',resize);resize();
+
+document.getElementById('fileInput').addEventListener('change',function(e){
+    const f=e.target.files[0];if(!f)return;
+    document.getElementById('fileInfo').textContent='📄 '+f.name+' ('+(f.size/1024).toFixed(1)+' КБ)';
+    document.getElementById('fileInfo').classList.add('show');
+    const r=new FileReader();r.onload=function(ev){document.getElementById('textInput').value=ev.target.result;setTimeout(analyze,300);};r.readAsText(f);
+});
+
+function loadExample(t){
+    if(t==='kant'){document.getElementById('textInput').value='Разум видит только то, что сам создаёт по собственному плану. Он должен идти впереди с принципами своих суждений по постоянным законам и заставлять природу отвечать на его вопросы, а не тащиться у неё на поводу. Но случайные наблюдения, производимые без предварительного плана, не связаны необходимым законом, тогда как разум ищет и нуждается в таком законе.';}
+    else if(t==='kant_full'){document.getElementById('textInput').value='ТРАНСЦЕНДЕНТАЛЬНОГО УЧЕНИЯ О НАЧАЛАХ\nЧАСТЬ ВТОРАЯ. ТРАНСЦЕНДЕНТАЛЬНАЯ ЛОГИКА\n\nВВЕДЕНИЕ. Идея трансцендентальной логики\n\nI. О логике вообще\n\nНаше знание возникает из двух основных источников души: первый есть способность получать представления (восприимчивость к впечатлениям), а второй — способность познавать через эти представления предмет (спонтанность понятий). Посредством первого предмет нам даётся, а посредством второго он мыслится в отношении к представлению. Созерцания и понятия суть, следовательно, начала всякого нашего познания, так что ни понятия без соответствующего им некоторым образом созерцания, ни созерцание без понятий не могут дать знание.\n\nИ те и другие или чистые, или эмпирические. Эмпирическими они называются тогда, когда в них содержится ощущение (которое предполагает действительное присутствие предмета). Чистыми же — тогда, когда к представлению не примешивается ощущение. Поэтому чистое созерцание содержит только форму, при которой нечто созерцается, а чистое понятие — только форму мышления о предмете вообще. Только чистые созерцания или чистые понятия возможны a priori, эмпирические же — только a posteriori.\n\nСпособность же получать представления мы называем чувственностью, так что объекты даются нам через чувственность, и только она даёт нам созерцания; рассудком же объекты мыслятся, и из него возникают понятия. Но всякое мышление должно в конце концов прямо или косвенно иметь отношение к созерцаниям, стало быть, у нас — к чувственности, так как ни один предмет не может быть нам дан иным способом.';}
+    setTimeout(analyze,200);
+}
+
+function toggleFilter(type,btn){activeFilters[type]=!activeFilters[type];btn.classList.toggle('active',activeFilters[type]);if(data){renderTextAnalysis();drawGraph();renderOperatorMap();}}
+
+function clearAll(){
+    document.getElementById('textInput').value='';document.getElementById('fileInfo').classList.remove('show');
+    document.getElementById('fileInput').value='';document.getElementById('styleIndicator').classList.remove('show');
+    data=null;originalText='';ctx.clearRect(0,0,canvas.width,canvas.height);
+    document.getElementById('substanceList').innerHTML='';document.getElementById('tensionList').innerHTML='';
+    document.getElementById('textAnalysis').innerHTML='';document.getElementById('operatorMap').innerHTML='';
+    ['statSubstances','statModus','statSplit','statHold','statTransition','statGrammar'].forEach(id=>document.getElementById(id).textContent='0');
+}
+
+function updateStats(r){if(!r)return;const s=r.stats||{};document.getElementById('statSubstances').textContent=s.total_substances||0;let m=0;if(r.substances)r.substances.forEach(sub=>{if(sub.modi)m+=sub.modi.length;});document.getElementById('statModus').textContent=m;const o=r.operator_stats||{};document.getElementById('statSplit').textContent=o.split||0;document.getElementById('statHold').textContent=o.hold||0;document.getElementById('statTransition').textContent=o.transition||0;document.getElementById('statGrammar').textContent=o.grammar_change||0;const oe=[{name:'split',count:o.split||0,style:'Структурный / аналитический',icon:'✂️'},{name:'hold',count:o.hold||0,style:'Диалектический / проблематизирующий',icon:'⚡'},{name:'transition',count:o.transition||0,style:'Переходный / синтезирующий',icon:'🔄'},{name:'grammar_change',count:o.grammar_change||0,style:'Рефлексивный / мета-уровневый',icon:'🔀'}];oe.sort((a,b)=>b.count-a.count);if(oe[0].count>0){document.getElementById('styleIndicator').classList.add('show');document.getElementById('styleName').textContent=oe[0].icon+' '+oe[0].style;}}
+
+function isWordBoundary(text,index,marker){const b=index>0?text[index-1]:' ';const a=index+marker.length<text.length?text[index+marker.length]:' ';return /[\s,.;:!?()«»—"'-]/.test(b)||b===' '||index===0?/[\s,.;:!?()«»—"'-]/.test(a)||a===' '||index+marker.length===text.length:false;}
+
+async function analyze(){
+    const text=document.getElementById('textInput').value.trim();if(!text)return;originalText=text;
+    const btn=document.getElementById('btnAnalyze');btn.disabled=true;btn.textContent='⏳ Анализ...';loading.style.display='block';ctx.clearRect(0,0,canvas.width,canvas.height);
+    try{const r=await fetch('http://localhost:8080/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+        if(r.ok){const sd=await r.json();if(!sd.operator_stats){sd.operator_matches=findOperatorMarkers(text);sd.operator_stats=countOperatorStats(sd.operator_matches);}if(!sd.operator_matches)sd.operator_matches=findOperatorMarkers(text);data=sd;}
+        else throw new Error('Server error');
+    }catch(e){console.log('Автономный режим');data=performLocalAnalysis(text);}
+    finally{btn.disabled=false;btn.textContent='▶ Анализ';loading.style.display='none';if(data){updateStats(data);drawGraph();renderOperatorMap();renderSubstances();renderTensions();renderTextAnalysis();}}
+}
+
+function performLocalAnalysis(text){
+    const substances=[],substanceIds=new Set();
+    const cats=[{w:'разум',n:'Разум',e:0.9},{w:'рассудок',n:'Рассудок',e:0.85},{w:'чувственность',n:'Чувственность',e:0.7},{w:'созерцание',n:'Созерцание',e:0.75},{w:'понятие',n:'Понятие',e:0.7},{w:'природа',n:'Природа',e:0.6},{w:'свобода',n:'Свобода',e:0.85},{w:'необходимость',n:'Необходимость',e:0.5},{w:'явление',n:'Явление',e:0.6},{w:'феномен',n:'Феномен',e:0.55},{w:'ноумен',n:'Ноумен',e:0.65},{w:'предмет',n:'Предмет',e:0.55},{w:'субстанция',n:'Субстанция',e:0.7},{w:'причина',n:'Причина',e:0.65},{w:'следствие',n:'Следствие',e:0.5},{w:'пространство',n:'Пространство',e:0.6},{w:'время',n:'Время',e:0.65},{w:'единство',n:'Единство',e:0.55},{w:'множество',n:'Множество',e:0.5},{w:'реальность',n:'Реальность',e:0.7},{w:'отрицание',n:'Отрицание',e:0.55},{w:'возможность',n:'Возможность',e:0.6},{w:'действительность',n:'Действительность',e:0.65},{w:'мораль',n:'Мораль',e:0.55},{w:'долг',n:'Долг',e:0.6},{w:'воля',n:'Воля',e:0.7},{w:'закон',n:'Закон',e:0.65},{w:'знание',n:'Знание',e:0.75}];
+    const tl=text.toLowerCase();
+    cats.forEach(c=>{if(tl.includes(c.w)){const cnt=(tl.match(new RegExp(c.w,'g'))||[]).length;substances.push({id:c.w,name:c.n,energy:Math.min(1,c.e+(cnt-1)*0.05),modi:[]});substanceIds.add(c.w);}});
+    const mods=[{v:'мыслит',s:'разум'},{v:'мыслиться',s:'понятие'},{v:'мышление',s:'разум'},{v:'даётся',s:'предмет'},{v:'даны',s:'предмет'},{v:'называем',s:'чувственность'},{v:'называются',s:'созерцание'},{v:'возникают',s:'понятие'},{v:'возникает',s:'знание'},{v:'создаёт',s:'разум'},{v:'содержит',s:'созерцание'},{v:'содержится',s:'ощущение'},{v:'познавать',s:'рассудок'},{v:'получать',s:'чувственность'}];
+    mods.forEach(mp=>{if(tl.includes(mp.v)&&substanceIds.has(mp.s)){const sub=substances.find(s=>s.id===mp.s);if(sub&&!sub.modi.some(m=>m.value===mp.v))sub.modi.push({name:mp.v,value:mp.v});}});
+    const tensions=[],pairs=[{a:'разум',b:'чувственность',r:'два источника познания'},{a:'созерцание',b:'понятие',r:'начала познания'},{a:'свобода',b:'необходимость',r:'антиномия'},{a:'явление',b:'ноумен',r:'вещь сама по себе'},{a:'пространство',b:'время',r:'формы созерцания'},{a:'единство',b:'множество',r:'категории количества'},{a:'возможность',b:'действительность',r:'категории модальности'},{a:'реальность',b:'отрицание',r:'категории качества'},{a:'субстанция',b:'причина',r:'категории отношения'},{a:'природа',b:'свобода',r:'детерминизм vs спонтанность'}];
+    pairs.forEach(p=>{if(substanceIds.has(p.a)&&substanceIds.has(p.b))tensions.push({id:'t_'+tensions.length,pole_a:p.a,pole_b:p.b,reason:p.r,status:'held'});});
+    const om=findOperatorMarkers(text),os=countOperatorStats(om);
+    return{substances,tensions,operator_matches:om,operator_stats:os,stats:{total_substances:substances.length,total_tensions:tensions.length,held_tensions:tensions.filter(t=>t.status==='held').length,resolved_tensions:tensions.filter(t=>t.status==='resolved').length}};
+}
+
+function findOperatorMarkers(text){
+    const markers={split:['с одной стороны','с другой стороны','во-первых','во-вторых','в-третьих','прежде всего','затем','наконец','разделим','различать','различие между','двояким образом','трояким образом','можно рассматривать'],hold:['антиномия','противоречие','противоположность','диалектика','парадокс','конфликт','столкновение','несовместимость','взаимоисключающий','но','однако','тем не менее','хотя','несмотря на','вопреки','в то же время','между тем','не может быть','невозможно'],transition:['перейдём','перейти','переход','обратимся','рассмотрим теперь','до сих пор','теперь же','выше было показано','далее','продолжим','следовательно','таким образом','в свою очередь','напротив','наоборот','стало быть'],grammar_change:['иначе говоря','другими словами','в ином смысле','в другом значении','переосмысление','с иной точки зрения','можно сказать иначе','то есть','а именно','иными словами','в сущности','по сути','строго говоря','собственно','в строгом смысле','в широком смысле']};
+    const matches=[],tl=text.toLowerCase();
+    for(const[op,ml]of Object.entries(markers)){for(const mk of ml){let sp=0;while(true){const idx=tl.indexOf(mk,sp);if(idx===-1)break;if(isWordBoundary(text,idx,mk)){const st=Math.max(0,tl.lastIndexOf('.',idx)+1),en=tl.indexOf('.',idx+mk.length);const ctx=text.substring(st,en===-1?Math.min(text.length,st+150):en+1).trim();matches.push({operator:op,marker:mk,position:idx,context:ctx.substring(0,120),confidence:mk.length>5?0.9:0.6});}sp=idx+mk.length;}}}
+    matches.sort((a,b)=>b.marker.length-a.marker.length);const uniq=[],used=new Set();
+    for(const m of matches){const k=m.position+'-'+m.operator;if(!used.has(k)){used.add(k);uniq.push(m);}}return uniq;
+}
+
+function countOperatorStats(matches){const s={split:0,hold:0,transition:0,grammar_change:0},seen=new Set();matches.forEach(m=>{const k=m.operator+'-'+m.marker;if(!seen.has(k)){seen.add(k);s[m.operator]=(s[m.operator]||0)+1;}});return s;}
+
+function drawGraph(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);if(!data||!data.substances||!data.substances.length)return;
+    const subs=data.substances,tens=data.tensions||[],pos={},cx=canvas.width/2,cy=canvas.height/2,r=Math.min(cx,cy)*0.38,n=subs.length;
+    subs.forEach((s,i)=>{const a=(2*Math.PI*i)/n-Math.PI/2;pos[s.id]={x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)};});
+    tens.forEach(t=>{const a=pos[t.pole_a],b=pos[t.pole_b];if(!a||!b)return;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);if(t.status==='held'){ctx.strokeStyle='#e94560';ctx.setLineDash([8,4]);ctx.lineWidth=3;}else{ctx.strokeStyle='#2ecc71';ctx.setLineDash([]);ctx.lineWidth=2;}ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#888';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText(t.reason||'',(a.x+b.x)/2,(a.y+b.y)/2-12);});
+    subs.forEach(s=>{const p=pos[s.id];if(!p)return;const rad=18+s.energy*35,grad=ctx.createRadialGradient(p.x,p.y,rad*0.3,p.x,p.y,rad);grad.addColorStop(0,'#ff6b6b');grad.addColorStop(0.5,s.energy>0.5?'#e94560':'#3498db');grad.addColorStop(1,s.energy>0.5?'#c23152':'#2980b9');ctx.beginPath();ctx.arc(p.x,p.y,rad,0,Math.PI*2);ctx.fillStyle=grad;ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText(s.name,p.x,p.y+4);ctx.font='10px sans-serif';ctx.fillStyle='#ccc';ctx.fillText(s.energy.toFixed(2),p.x,p.y+rad+14);});
+}
+
+function renderOperatorMap(){
+    const c=document.getElementById('operatorMap');if(!data||!data.operator_matches||!data.operator_matches.length){c.innerHTML='<div style="color:#888;text-align:center;padding:40px;">Операторы не обнаружены.</div>';return;}
+    const f=data.operator_matches.filter(m=>activeFilters[m.operator]!==false);if(!f.length){c.innerHTML='<div style="color:#888;text-align:center;padding:40px;">Все операторы скрыты фильтрами.</div>';return;}
+    const icons={split:'✂️',hold:'⚡',transition:'🔄',grammar_change:'🔀'},names={split:'Split (разделение)',hold:'Hold (удержание)',transition:'Transition (переход)',grammar_change:'Grammar Change (смена грамматики)'};
+    c.innerHTML=f.map(m=>'<div class="operator-card"><div class="op-icon '+m.operator+'">'+(icons[m.operator]||'•')+'</div><div class="op-info"><div class="op-marker">'+(names[m.operator]||m.operator)+'</div><div style="color:#fff;">Маркер: «'+m.marker+'»</div><div class="op-context">…'+m.context+'…</div><div class="op-confidence">Уверенность: '+Math.round(m.confidence*100)+'%</div></div></div>').join('');
+}
+
+function renderSubstances(){
+    const c=document.getElementById('substanceList');if(!data||!data.substances||!data.substances.length){c.innerHTML='<div style="color:#888;text-align:center;padding:40px;">Нет данных</div>';return;}
+    c.innerHTML=data.substances.map(s=>'<div class="substance-card"><h3>'+s.name+'</h3><div style="font-size:12px;color:#888;">ID: '+s.id+' | Энергия: '+s.energy.toFixed(2)+'</div><div class="energy-bar"><div class="energy-fill" style="width:'+(s.energy*100)+'%"></div></div>'+(s.modi&&s.modi.length?'<div class="modi">Модусы: '+s.modi.map(m=>'<span>'+m.value+'</span>').join(', ')+'</div>':'')+'</div>').join('');
+}
+
+function renderTensions(){
+    const c=document.getElementById('tensionList');if(!data||!data.tensions||!data.tensions.length){c.innerHTML='<div style="color:#888;text-align:center;padding:40px;">Противоречия не обнаружены</div>';return;}
+    c.innerHTML=data.tensions.map(t=>'<div class="tension-card"><div class="status '+t.status+'"></div><div class="info"><strong>'+t.pole_a+'</strong> ↔ <strong>'+t.pole_b+'</strong><div class="reason">'+(t.reason||'')+' · '+(t.status==='held'?'Удерживается':'Разрешено')+'</div></div></div>').join('');
+}
+
+function renderTextAnalysis(){
+    const c=document.getElementById('textAnalysis');if(!originalText||!data){c.innerHTML='<div style="color:#888;">Нет данных</div>';return;}
+    let h=escapeHTML(originalText);const spans=[];
+    if(activeFilters.substance&&data.substances){data.substances.forEach(s=>{const re=new RegExp('(^|[\\s,.;:!?()«»—"\'-])('+escapeRegex(s.name)+')($|[\\s,.;:!?()«»—"\'-])','gi');let m;while((m=re.exec(originalText))!==null){spans.push({start:m.index+m[1].length,end:m.index+m[1].length+m[2].length,text:m[2],type:'substance',title:'Субстанция: '+s.name+' (энергия: '+s.energy.toFixed(2)+')',className:'hl-substance'});}});}
+    if(activeFilters.modus&&data.substances){const am=[];data.substances.forEach(s=>{if(s.modi)s.modi.forEach(m=>am.push(m.value));});am.forEach(m=>{const re=new RegExp('(^|[\\s,.;:!?()«»—"\'-])('+escapeRegex(m)+')($|[\\s,.;:!?()«»—"\'-])','gi');let mm;while((mm=re.exec(originalText))!==null){spans.push({start:mm.index+mm[1].length,end:mm.index+mm[1].length+mm[2].length,text:mm[2],type:'modus',title:'Модус',className:'hl-modus'});}});}
+    if(data.operator_matches){data.operator_matches.forEach(m=>{if(activeFilters[m.operator]!==false&&isWordBoundary(originalText,m.position,m.marker)){spans.push({start:m.position,end:m.position+m.marker.length,text:m.marker,type:m.operator,title:'Оператор: '+m.operator+' ('+Math.round(m.confidence*100)+'%)',className:'hl-'+m.operator});}});}
+    spans.sort((a,b)=>a.start-b.start||b.end-a.end);const fs=[];let le=0;for(const s of spans){if(s.start>=le){fs.push(s);le=s.end;}}
+    fs.sort((a,b)=>b.start-a.start);for(const s of fs){h=h.substring(0,s.start)+'<span class="'+s.className+'" title="'+escapeHTML(s.title)+'">'+h.substring(s.start,s.end)+'</span>'+h.substring(s.end);}
+    let leg='<div class="legend">';if(activeFilters.substance)leg+='<span><span class="swatch" style="background:#e9456030;border-bottom:2px solid #e94560"></span> Субстанции</span>';if(activeFilters.modus)leg+='<span><span class="swatch" style="background:#3498db30;border-bottom:2px dotted #3498db"></span> Модусы</span>';if(activeFilters.hold)leg+='<span><span class="swatch" style="background:#FF880030;border-bottom:2px dashed #f39c12"></span> Hold</span>';if(activeFilters.split)leg+='<span><span class="swatch" style="background:#44CC4430;border-bottom:2px solid #44CC44"></span> Split</span>';if(activeFilters.transition)leg+='<span><span class="swatch" style="background:#AA44FF30;border-bottom:2px dotted #AA44FF"></span> Transition</span>';if(activeFilters.grammar_change)leg+='<span><span class="swatch" style="background:#00BBBB30;border-bottom:2px dashed #00BBBB"></span> Grammar Ch.</span>';leg+='</div>';
+    c.innerHTML=leg+h;
+    c.querySelectorAll('[title]').forEach(el=>{el.addEventListener('mouseenter',e=>{tooltip.textContent=el.getAttribute('title');tooltip.style.display='block';tooltip.style.left=(e.pageX+10)+'px';tooltip.style.top=(e.pageY-30)+'px';});el.addEventListener('mouseleave',()=>{tooltip.style.display='none';});});
+}
+
+function switchTab(name){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    const tm={graph:0,operators:1,substances:2,tensions:3,text:4},idx=tm[name]!==undefined?tm[name]:0;
+    const tabs=document.querySelectorAll('.tab');if(tabs[idx])tabs[idx].classList.add('active');
+    const pane=document.getElementById('tab-'+name);if(pane)pane.classList.add('active');
+    if(name==='graph'){resize();drawGraph();}
+}
+
+function escapeHTML(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function escapeRegex(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+
+window.addEventListener('DOMContentLoaded',()=>{
+    loadExample('kant');document.querySelectorAll('.filter-btn').forEach(b=>b.classList.add('active'));
+    setTimeout(()=>{const t=document.getElementById('textInput').value.trim();if(t)analyze();},500);
+});
+</script>
 </body>
 </html>
