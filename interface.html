@@ -3,173 +3,501 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GrammaLang — Анализатор философского текста</title>
+    <title>GrammaLang — Анализатор философского текста v2.0</title>
     <style>
+        :root {
+            --bg: #1a1a2e;
+            --surface: #16213e;
+            --border: #0f3460;
+            --accent: #e94560;
+            --text: #eee;
+            --muted: #888;
+            --split: #44CC44;
+            --hold: #FF8800;
+            --transition: #AA44FF;
+            --grammar_change: #00BBBB;
+            --substance: #e94560;
+            --modus: #3498db;
+            --tension: #f39c12;
+        }
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #1a1a2e; color: #eee; display: flex; height: 100vh; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; }
         
-        .panel { width: 400px; min-width: 400px; background: #16213e; display: flex; flex-direction: column; border-right: 2px solid #0f3460; }
-        .panel-header { padding: 20px; border-bottom: 1px solid #0f3460; }
-        .panel-header h1 { font-size: 22px; color: #e94560; margin-bottom: 5px; }
-        .panel-header p { font-size: 12px; color: #888; }
-        .panel-body { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+        /* === ЛЕВАЯ ПАНЕЛЬ === */
+        .panel { width: 420px; min-width: 420px; background: var(--surface); display: flex; flex-direction: column; border-right: 2px solid var(--border); }
+        .panel-header { padding: 20px; border-bottom: 1px solid var(--border); }
+        .panel-header h1 { font-size: 24px; color: var(--accent); margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+        .panel-header h1 .version { font-size: 11px; background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 10px; }
+        .panel-header p { font-size: 12px; color: var(--muted); }
+        .panel-body { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
         
-        textarea { flex: 1; background: #1a1a2e; color: #eee; border: 1px solid #0f3460; border-radius: 5px; padding: 15px; font-family: 'Times New Roman', serif; font-size: 15px; line-height: 1.6; resize: none; min-height: 180px; }
-        textarea:focus { outline: none; border-color: #e94560; }
+        /* Загрузка файла */
+        .file-upload { display: flex; gap: 8px; align-items: center; }
+        .file-upload input[type="file"] { display: none; }
+        .file-upload label { 
+            flex: 1; padding: 10px; background: transparent; color: var(--accent); 
+            border: 1px dashed var(--accent); border-radius: 5px; cursor: pointer; 
+            text-align: center; font-size: 13px; transition: 0.2s;
+        }
+        .file-upload label:hover { background: #e9456010; }
+        .file-info { font-size: 11px; color: var(--muted); text-align: center; display: none; }
+        .file-info.show { display: block; }
         
+        /* Текстовое поле */
+        textarea { 
+            flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); 
+            border-radius: 5px; padding: 15px; font-family: 'Times New Roman', serif; 
+            font-size: 15px; line-height: 1.7; resize: none; min-height: 160px; 
+        }
+        textarea:focus { outline: none; border-color: var(--accent); }
+        
+        /* Фильтры подсветки */
+        .filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
+        .filter-btn { 
+            padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border); 
+            background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; 
+            transition: 0.2s; white-space: nowrap; 
+        }
+        .filter-btn:hover { border-color: var(--text); color: var(--text); }
+        .filter-btn.active { color: #fff; font-weight: 600; }
+        .filter-btn[data-type="substance"].active { background: var(--substance); border-color: var(--substance); }
+        .filter-btn[data-type="modus"].active { background: var(--modus); border-color: var(--modus); }
+        .filter-btn[data-type="split"].active { background: var(--split); border-color: var(--split); }
+        .filter-btn[data-type="hold"].active { background: var(--hold); border-color: var(--hold); }
+        .filter-btn[data-type="transition"].active { background: var(--transition); border-color: var(--transition); }
+        .filter-btn[data-type="grammar_change"].active { background: var(--grammar_change); border-color: var(--grammar_change); }
+        
+        /* Кнопки */
         .buttons { display: flex; gap: 10px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.2s; }
-        .btn-analyze { background: #e94560; color: #fff; }
+        button { 
+            flex: 1; padding: 12px; border: none; border-radius: 5px; cursor: pointer; 
+            font-size: 14px; font-weight: 600; transition: 0.2s; 
+        }
+        .btn-analyze { background: var(--accent); color: #fff; }
         .btn-analyze:hover { background: #c23152; }
         .btn-analyze:disabled { background: #555; cursor: not-allowed; }
-        .btn-clear { background: #0f3460; color: #fff; }
+        .btn-clear { background: var(--border); color: #fff; }
         .btn-clear:hover { background: #1a4a7a; }
-        .btn-example { background: transparent; color: #e94560; border: 1px solid #e94560; font-size: 12px; padding: 8px; }
+        .btn-example { 
+            background: transparent; color: var(--accent); border: 1px solid var(--accent); 
+            font-size: 12px; padding: 8px; flex: none; 
+        }
         .btn-example:hover { background: #e9456020; }
         
-        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .stat { background: #1a1a2e; padding: 10px; border-radius: 5px; text-align: center; border: 1px solid #0f3460; }
-        .stat .num { font-size: 24px; font-weight: 700; color: #e94560; }
-        .stat .label { font-size: 11px; color: #888; margin-top: 3px; }
+        /* Статистика */
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .stat { 
+            background: var(--bg); padding: 10px; border-radius: 5px; text-align: center; 
+            border: 1px solid var(--border); 
+        }
+        .stat .num { font-size: 24px; font-weight: 700; }
+        .stat .num.substance-c { color: var(--substance); }
+        .stat .num.modus-c { color: var(--modus); }
+        .stat .num.split-c { color: var(--split); }
+        .stat .num.hold-c { color: var(--hold); }
+        .stat .num.transition-c { color: var(--transition); }
+        .stat .num.grammar-c { color: var(--grammar_change); }
+        .stat .label { font-size: 10px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 1px; }
         
-        .main { flex: 1; display: flex; flex-direction: column; }
-        .tabs { display: flex; background: #16213e; border-bottom: 2px solid #0f3460; }
-        .tab { padding: 12px 20px; cursor: pointer; font-size: 14px; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: 0.2s; }
-        .tab.active { color: #e94560; border-bottom-color: #e94560; }
+        /* Индикатор доминирующего стиля */
+        .style-indicator { 
+            background: var(--bg); border: 1px solid var(--border); border-radius: 5px; 
+            padding: 10px 14px; font-size: 13px; display: none; 
+        }
+        .style-indicator.show { display: block; }
+        .style-indicator .style-name { color: var(--accent); font-weight: 600; }
+        
+        /* === ПРАВАЯ ПАНЕЛЬ === */
+        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        
+        /* Вкладки */
+        .tabs { display: flex; background: var(--surface); border-bottom: 2px solid var(--border); overflow-x: auto; }
+        .tab { 
+            padding: 12px 20px; cursor: pointer; font-size: 13px; color: var(--muted); 
+            border-bottom: 2px solid transparent; margin-bottom: -2px; transition: 0.2s; 
+            white-space: nowrap; 
+        }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
         .tab:hover { color: #fff; }
         .tab-content { flex: 1; position: relative; overflow: hidden; }
         .tab-pane { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
-        .tab-pane.active { display: block; }
+        .tab-pane.active { display: flex; flex-direction: column; }
         
+        /* Граф */
         #graphCanvas { width: 100%; height: 100%; }
+        .graph-legend {
+            position: absolute; bottom: 10px; right: 10px; background: rgba(22, 33, 62, 0.95);
+            border-radius: 8px; padding: 10px 14px; font-size: 11px; z-index: 10;
+            border: 1px solid var(--border);
+        }
+        .graph-legend .leg-item { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+        .graph-legend .leg-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
         
+        /* Субстанции */
         .substance-list, .tension-list, .text-analysis { padding: 20px; overflow-y: auto; height: 100%; }
-        
-        .substance-card { background: #16213e; border: 1px solid #0f3460; border-radius: 8px; padding: 15px; margin-bottom: 10px; }
-        .substance-card h3 { color: #e94560; margin-bottom: 5px; }
-        .substance-card .energy-bar { height: 8px; background: #0f3460; border-radius: 4px; margin: 8px 0; overflow: hidden; }
-        .substance-card .energy-fill { height: 100%; background: linear-gradient(90deg, #3498db, #e94560); border-radius: 4px; transition: width 0.5s; }
+        .substance-card { 
+            background: var(--surface); border: 1px solid var(--border); border-radius: 8px; 
+            padding: 15px; margin-bottom: 10px; 
+        }
+        .substance-card h3 { color: var(--accent); margin-bottom: 5px; }
+        .substance-card .energy-bar { height: 8px; background: var(--border); border-radius: 4px; margin: 8px 0; overflow: hidden; }
+        .substance-card .energy-fill { 
+            height: 100%; background: linear-gradient(90deg, var(--modus), var(--accent)); 
+            border-radius: 4px; transition: width 0.5s; 
+        }
         .substance-card .modi { font-size: 12px; color: #aaa; }
-        .substance-card .modi span { color: #e94560; }
+        .substance-card .modi span { color: var(--accent); }
         
-        .tension-card { background: #16213e; border: 1px solid #0f3460; border-radius: 8px; padding: 12px 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+        /* Противоречия */
+        .tension-card { 
+            background: var(--surface); border: 1px solid var(--border); border-radius: 8px; 
+            padding: 12px 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; 
+        }
         .tension-card .status { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-        .tension-card .status.held { background: #e94560; animation: pulse 1s infinite; }
+        .tension-card .status.held { background: var(--accent); animation: pulse 1s infinite; }
         .tension-card .status.resolved { background: #2ecc71; }
         .tension-card .info { flex: 1; }
-        .tension-card .info strong { color: #e94560; }
-        .tension-card .info .reason { font-size: 11px; color: #888; }
-        
+        .tension-card .info strong { color: var(--accent); }
+        .tension-card .info .reason { font-size: 11px; color: var(--muted); }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
         
+        /* Текст с подсветкой */
         .text-analysis { font-family: 'Times New Roman', serif; font-size: 16px; line-height: 1.8; }
-        .text-analysis .substance-hl { background: #e9456040; padding: 2px 4px; border-radius: 3px; border-bottom: 2px solid #e94560; cursor: pointer; }
-        .text-analysis .tension-hl { background: #f39c1240; padding: 2px 4px; border-radius: 3px; border-bottom: 2px dashed #f39c12; cursor: pointer; }
-        .text-analysis .modus-hl { background: #3498db40; padding: 2px 4px; border-radius: 3px; border-bottom: 2px dotted #3498db; cursor: pointer; }
-        .text-analysis .legend { margin-bottom: 15px; font-size: 12px; font-family: sans-serif; display: flex; gap: 20px; }
+        .text-analysis .hl-substance { 
+            background: #e9456030; padding: 2px 4px; border-radius: 3px; 
+            border-bottom: 2px solid var(--substance); cursor: pointer; 
+        }
+        .text-analysis .hl-modus { 
+            background: #3498db30; padding: 2px 4px; border-radius: 3px; 
+            border-bottom: 2px dotted var(--modus); cursor: pointer; 
+        }
+        .text-analysis .hl-hold { 
+            background: #FF880030; padding: 2px 4px; border-radius: 3px; 
+            border-bottom: 2px dashed var(--hold); cursor: pointer; 
+        }
+        .text-analysis .hl-split { 
+            background: #44CC4430; padding: 2px 4px; border-radius: 3px; 
+            border-bottom: 2px solid var(--split); cursor: pointer; 
+        }
+        .text-analysis .hl-transition { 
+            background: #AA44FF30; padding: 2px 4px; border-radius: 3px; 
+            border-bottom: 2px dotted var(--transition); cursor: pointer; 
+        }
+        .text-analysis .hl-grammar_change { 
+            background: #00BBBB30; padding: 2px 4px; border-radius: 3px; 
+            border-bottom: 2px dashed var(--grammar_change); cursor: pointer; 
+        }
+        .text-analysis .legend { 
+            margin-bottom: 15px; font-size: 12px; font-family: sans-serif; 
+            display: flex; gap: 15px; flex-wrap: wrap; 
+        }
         .text-analysis .legend span { display: inline-flex; align-items: center; gap: 5px; }
         .text-analysis .legend .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; }
         
-        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #888; }
-        .loading .spinner { width: 40px; height: 40px; border: 3px solid #0f3460; border-top-color: #e94560; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        /* Всплывающая подсказка */
+        .tooltip {
+            position: fixed; background: #2a2a3a; border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px; padding: 10px 14px; pointer-events: none; z-index: 1000;
+            max-width: 280px; font-size: 13px; line-height: 1.5; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            display: none;
+        }
+        
+        /* Загрузка */
+        .loading { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            text-align: center; color: var(--muted); z-index: 20; 
+        }
+        .loading .spinner { 
+            width: 40px; height: 40px; border: 3px solid var(--border); 
+            border-top-color: var(--accent); border-radius: 50%; 
+            animation: spin 1s linear infinite; margin: 0 auto 15px; 
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Карта операторов */
+        .operator-map { padding: 20px; overflow-y: auto; height: 100%; }
+        .operator-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+            padding: 12px 15px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start;
+        }
+        .operator-card .op-icon {
+            width: 36px; height: 36px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+        }
+        .operator-card .op-icon.split { background: #44CC4430; color: var(--split); }
+        .operator-card .op-icon.hold { background: #FF880030; color: var(--hold); }
+        .operator-card .op-icon.transition { background: #AA44FF30; color: var(--transition); }
+        .operator-card .op-icon.grammar_change { background: #00BBBB30; color: var(--grammar_change); }
+        .operator-card .op-info { flex: 1; font-size: 13px; }
+        .operator-card .op-marker { color: var(--accent); font-weight: 600; }
+        .operator-card .op-context { color: var(--muted); font-size: 12px; margin-top: 4px; font-style: italic; }
+        .operator-card .op-confidence { font-size: 11px; color: var(--muted); margin-top: 4px; }
     </style>
 </head>
 <body>
     <div class="panel">
         <div class="panel-header">
-            <h1>GrammaLang</h1>
-            <p>Грамматическая Машина — анализ философского текста</p>
+            <h1>GrammaLang <span class="version">2.0</span></h1>
+            <p>Грамматическая Машина — визуализация операторов и онтологии</p>
         </div>
         <div class="panel-body">
-            <button class="btn-example" onclick="loadExample()">📄 Загрузить пример (Кант)</button>
-            <textarea id="textInput" placeholder="Введите философский текст для анализа..."></textarea>
+            <!-- Загрузка файла -->
+            <div class="file-upload">
+                <input type="file" id="fileInput" accept=".txt">
+                <label for="fileInput">📂 Загрузить главу (.txt)</label>
+            </div>
+            <div class="file-info" id="fileInfo"></div>
+            
+            <!-- Примеры -->
+            <div style="display:flex;gap:6px;">
+                <button class="btn-example" onclick="loadExample('kant')">📖 Кант (фрагмент)</button>
+                <button class="btn-example" onclick="loadExample('kant_full')">📚 Кант (глава)</button>
+            </div>
+            
+            <!-- Текст -->
+            <textarea id="textInput" placeholder="Введите философский текст для анализа...&#10;&#10;Поддерживается загрузка целых глав.&#10;Будут найдены: субстанции, модусы, противоречия&#10;и маркеры операторов: Split, Hold, Transition, Grammar Change."></textarea>
+            
+            <!-- Фильтры -->
+            <div class="filter-row">
+                <button class="filter-btn active" data-type="substance" onclick="toggleFilter('substance', this)">🧬 Субстанции</button>
+                <button class="filter-btn active" data-type="modus" onclick="toggleFilter('modus', this)">🔧 Модусы</button>
+                <button class="filter-btn active" data-type="split" onclick="toggleFilter('split', this)">✂️ Split</button>
+                <button class="filter-btn active" data-type="hold" onclick="toggleFilter('hold', this)">⚡ Hold</button>
+                <button class="filter-btn active" data-type="transition" onclick="toggleFilter('transition', this)">🔄 Transition</button>
+                <button class="filter-btn active" data-type="grammar_change" onclick="toggleFilter('grammar_change', this)">🔀 Grammar Ch.</button>
+            </div>
+            
+            <!-- Кнопки -->
             <div class="buttons">
                 <button class="btn-analyze" id="btnAnalyze" onclick="analyze()">▶ Анализ</button>
                 <button class="btn-clear" onclick="clearAll()">✕ Очистить</button>
             </div>
+            
+            <!-- Индикатор стиля -->
+            <div class="style-indicator" id="styleIndicator">
+                🎯 Доминирующий стиль: <span class="style-name" id="styleName"></span>
+            </div>
+            
+            <!-- Статистика -->
             <div class="stats" id="stats">
-                <div class="stat"><div class="num" id="statSubstances">0</div><div class="label">Субстанции</div></div>
-                <div class="stat"><div class="num" id="statTensions">0</div><div class="label">Противоречия</div></div>
-                <div class="stat"><div class="num" id="statHeld">0</div><div class="label">Удерживаются</div></div>
-                <div class="stat"><div class="num" id="statResolved">0</div><div class="label">Разрешены</div></div>
+                <div class="stat"><div class="num substance-c" id="statSubstances">0</div><div class="label">Субстанции</div></div>
+                <div class="stat"><div class="num modus-c" id="statModus">0</div><div class="label">Модусы</div></div>
+                <div class="stat"><div class="num split-c" id="statSplit">0</div><div class="label">Split</div></div>
+                <div class="stat"><div class="num hold-c" id="statHold">0</div><div class="label">Hold</div></div>
+                <div class="stat"><div class="num transition-c" id="statTransition">0</div><div class="label">Transition</div></div>
+                <div class="stat"><div class="num grammar-c" id="statGrammar">0</div><div class="label">Grammar Ch.</div></div>
             </div>
         </div>
     </div>
 
     <div class="main">
         <div class="tabs">
-            <div class="tab active" onclick="switchTab('graph')">◉ Граф</div>
+            <div class="tab active" onclick="switchTab('graph')">◉ Граф онтологии</div>
+            <div class="tab" onclick="switchTab('operators')">⚙️ Карта операторов</div>
             <div class="tab" onclick="switchTab('substances')">⬤ Субстанции</div>
             <div class="tab" onclick="switchTab('tensions')">⬡ Противоречия</div>
-            <div class="tab" onclick="switchTab('text')">📝 Текст</div>
+            <div class="tab" onclick="switchTab('text')">📝 Текст с разметкой</div>
         </div>
         <div class="tab-content">
-            <div class="tab-pane active" id="tab-graph">
+            <!-- Граф -->
+            <div class="tab-pane active" id="tab-graph" style="position:relative;">
                 <canvas id="graphCanvas"></canvas>
+                <div class="graph-legend">
+                    <div class="leg-item"><span class="leg-swatch" style="background:var(--substance)"></span> Субстанция</div>
+                    <div class="leg-item"><span class="leg-swatch" style="background:var(--hold)"></span> Held (удерживается)</div>
+                    <div class="leg-item"><span class="leg-swatch" style="background:#2ecc71"></span> Resolved (разрешено)</div>
+                </div>
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
                     <div>Анализ текста...</div>
                 </div>
             </div>
+            
+            <!-- Карта операторов -->
+            <div class="tab-pane" id="tab-operators">
+                <div class="operator-map" id="operatorMap"></div>
+            </div>
+            
+            <!-- Субстанции -->
             <div class="tab-pane" id="tab-substances">
                 <div class="substance-list" id="substanceList"></div>
             </div>
+            
+            <!-- Противоречия -->
             <div class="tab-pane" id="tab-tensions">
                 <div class="tension-list" id="tensionList"></div>
             </div>
+            
+            <!-- Текст -->
             <div class="tab-pane" id="tab-text">
                 <div class="text-analysis" id="textAnalysis"></div>
             </div>
         </div>
     </div>
+    
+    <!-- Всплывающая подсказка -->
+    <div class="tooltip" id="tooltip"></div>
 
     <script>
+        // ==================== СОСТОЯНИЕ ====================
         let data = null;
         let originalText = '';
+        let activeFilters = {
+            substance: true,
+            modus: true,
+            split: true,
+            hold: true,
+            transition: true,
+            grammar_change: true,
+        };
+        
         const canvas = document.getElementById('graphCanvas');
         const ctx = canvas.getContext('2d');
         const loading = document.getElementById('loading');
+        const tooltip = document.getElementById('tooltip');
         loading.style.display = 'none';
-
+        
+        // ==================== РАЗМЕРЫ ====================
         function resize() {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
+            const container = canvas.parentElement;
+            if (!container) return;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
             if (data) drawGraph();
         }
         window.addEventListener('resize', resize);
         resize();
-
-        function loadExample() {
-            document.getElementById('textInput').value = 
-                'Разум видит только то, что сам создаёт по собственному плану. ' +
-                'Он должен идти впереди с принципами своих суждений по постоянным законам ' +
-                'и заставлять природу отвечать на его вопросы, а не тащиться у неё на поводу. ' +
-                'Но случайные наблюдения, производимые без предварительного плана, ' +
-                'не связаны необходимым законом, тогда как разум ищет и нуждается в таком законе.';
+        
+        // ==================== ЗАГРУЗКА ФАЙЛА ====================
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const info = document.getElementById('fileInfo');
+            info.textContent = `📄 ${file.name} (${(file.size / 1024).toFixed(1)} КБ)`;
+            info.classList.add('show');
+            
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                document.getElementById('textInput').value = ev.target.result;
+            };
+            reader.readAsText(file);
+        });
+        
+        // ==================== ПРИМЕРЫ ====================
+        function loadExample(type) {
+            if (type === 'kant') {
+                document.getElementById('textInput').value = 
+                    'Разум видит только то, что сам создаёт по собственному плану. ' +
+                    'Он должен идти впереди с принципами своих суждений по постоянным законам ' +
+                    'и заставлять природу отвечать на его вопросы, а не тащиться у неё на поводу. ' +
+                    'Но случайные наблюдения, производимые без предварительного плана, ' +
+                    'не связаны необходимым законом, тогда как разум ищет и нуждается в таком законе.';
+            } else if (type === 'kant_full') {
+                document.getElementById('textInput').value = 
+                    'ТРАНСЦЕНДЕНТАЛЬНОГО УЧЕНИЯ О НАЧАЛАХ\n' +
+                    'ЧАСТЬ ВТОРАЯ. ТРАНСЦЕНДЕНТАЛЬНАЯ ЛОГИКА\n\n' +
+                    'ВВЕДЕНИЕ. Идея трансцендентальной логики\n\n' +
+                    'I. О логике вообще\n\n' +
+                    'Наше знание возникает из двух основных источников души: первый есть способность ' +
+                    'получать представления (восприимчивость к впечатлениям), а второй — способность ' +
+                    'познавать через эти представления предмет (спонтанность понятий). ' +
+                    'Посредством первого предмет нам даётся, а посредством второго он мыслится ' +
+                    'в отношении к представлению. Созерцания и понятия суть, следовательно, ' +
+                    'начала всякого нашего познания, так что ни понятия без соответствующего ' +
+                    'им некоторым образом созерцания, ни созерцание без понятий не могут дать знание.\n\n' +
+                    'И те и другие или чистые, или эмпирические. Эмпирическими они называются тогда, ' +
+                    'когда в них содержится ощущение (которое предполагает действительное присутствие ' +
+                    'предмета). Чистыми же — тогда, когда к представлению не примешивается ощущение. ' +
+                    'Поэтому чистое созерцание содержит только форму, при которой нечто созерцается, ' +
+                    'а чистое понятие — только форму мышления о предмете вообще. ' +
+                    'Только чистые созерцания или чистые понятия возможны a priori, ' +
+                    'эмпирические же — только a posteriori.\n\n' +
+                    'Способность же получать представления мы называем чувственностью, так что объекты ' +
+                    'даются нам через чувственность, и только она даёт нам созерцания; ' +
+                    'рассудком же объекты мыслятся, и из него возникают понятия. ' +
+                    'Но всякое мышление должно в конце концов прямо или косвенно ' +
+                    'иметь отношение к созерцаниям, стало быть, у нас — к чувственности, ' +
+                    'так как ни один предмет не может быть нам дан иным способом.';
+            }
         }
-
+        
+        // ==================== ФИЛЬТРЫ ====================
+        function toggleFilter(type, btn) {
+            activeFilters[type] = !activeFilters[type];
+            btn.classList.toggle('active', activeFilters[type]);
+            
+            if (data) {
+                renderTextAnalysis();
+                drawGraph();
+                renderOperatorMap();
+            }
+        }
+        
+        // ==================== ОЧИСТКА ====================
         function clearAll() {
             document.getElementById('textInput').value = '';
+            document.getElementById('fileInfo').classList.remove('show');
+            document.getElementById('fileInput').value = '';
+            document.getElementById('styleIndicator').classList.remove('show');
             data = null;
             originalText = '';
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             document.getElementById('substanceList').innerHTML = '';
             document.getElementById('tensionList').innerHTML = '';
             document.getElementById('textAnalysis').innerHTML = '';
-            updateStats(null);
+            document.getElementById('operatorMap').innerHTML = '';
+            resetStats();
         }
-
+        
+        function resetStats() {
+            ['statSubstances','statModus','statSplit','statHold','statTransition','statGrammar'].forEach(id => {
+                document.getElementById(id).textContent = '0';
+            });
+        }
+        
         function updateStats(result) {
-            const ids = ['statSubstances', 'statTensions', 'statHeld', 'statResolved'];
-            ids.forEach(id => document.getElementById(id).textContent = '0');
-            if (!result || !result.stats) return;
-            document.getElementById('statSubstances').textContent = result.stats.total_substances;
-            document.getElementById('statTensions').textContent = result.stats.total_tensions;
-            document.getElementById('statHeld').textContent = result.stats.held_tensions;
-            document.getElementById('statResolved').textContent = result.stats.resolved_tensions;
+            resetStats();
+            if (!result) return;
+            
+            const s = result.stats || {};
+            document.getElementById('statSubstances').textContent = s.total_substances || 0;
+            
+            // Подсчёт модусов
+            let modusCount = 0;
+            if (result.substances) {
+                result.substances.forEach(sub => {
+                    if (sub.modi) modusCount += sub.modi.length;
+                });
+            }
+            document.getElementById('statModus').textContent = modusCount;
+            
+            // Операторы
+            const ops = result.operator_stats || {};
+            document.getElementById('statSplit').textContent = ops.split || 0;
+            document.getElementById('statHold').textContent = ops.hold || 0;
+            document.getElementById('statTransition').textContent = ops.transition || 0;
+            document.getElementById('statGrammar').textContent = ops.grammar_change || 0;
+            
+            // Определяем доминирующий стиль
+            const opEntries = [
+                {name: 'split', count: ops.split || 0, style: 'Структурный / аналитический', icon: '✂️'},
+                {name: 'hold', count: ops.hold || 0, style: 'Диалектический / проблематизирующий', icon: '⚡'},
+                {name: 'transition', count: ops.transition || 0, style: 'Переходный / синтезирующий', icon: '🔄'},
+                {name: 'grammar_change', count: ops.grammar_change || 0, style: 'Рефлексивный / мета-уровневый', icon: '🔀'},
+            ];
+            opEntries.sort((a, b) => b.count - a.count);
+            
+            if (opEntries[0].count > 0) {
+                const indicator = document.getElementById('styleIndicator');
+                indicator.classList.add('show');
+                document.getElementById('styleName').textContent = 
+                    `${opEntries[0].icon} ${opEntries[0].style}`;
+            }
         }
-
+        
+        // ==================== АНАЛИЗ ====================
         async function analyze() {
             const text = document.getElementById('textInput').value.trim();
             if (!text) return;
@@ -187,31 +515,236 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text })
                 });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
                 data = await response.json();
+                
+                // Если сервер не вернул operator_stats, эмулируем на клиенте
+                if (!data.operator_stats) {
+                    data.operator_stats = emulateOperatorDetection(text, data);
+                }
+                if (!data.operator_matches) {
+                    data.operator_matches = findOperatorMarkers(text);
+                }
+                
                 updateStats(data);
                 drawGraph();
+                renderOperatorMap();
                 renderSubstances();
                 renderTensions();
                 renderTextAnalysis();
+                
             } catch (e) {
-                alert('Ошибка соединения с сервером. Убедитесь, что сервер запущен на порту 8080.');
+                console.error('Ошибка:', e);
+                // Эмуляция для демонстрации
+                emulateAnalysis(text);
             } finally {
                 btn.disabled = false;
                 btn.textContent = '▶ Анализ';
                 loading.style.display = 'none';
             }
         }
-
+        
+        // ==================== ЭМУЛЯЦИЯ (демо-режим) ====================
+        function emulateAnalysis(text) {
+            // Создаём тестовые данные
+            const substances = [];
+            const substanceIds = new Set();
+            
+            const categories = [
+                {word: 'разум', name: 'Разум', energy: 0.9},
+                {word: 'рассудок', name: 'Рассудок', energy: 0.8},
+                {word: 'чувственность', name: 'Чувственность', energy: 0.7},
+                {word: 'созерцание', name: 'Созерцание', energy: 0.75},
+                {word: 'понятие', name: 'Понятие', energy: 0.7},
+                {word: 'природа', name: 'Природа', energy: 0.6},
+                {word: 'свобода', name: 'Свобода', energy: 0.85},
+                {word: 'необходимость', name: 'Необходимость', energy: 0.5},
+                {word: 'явление', name: 'Явление', energy: 0.6},
+                {word: 'предмет', name: 'Предмет', energy: 0.55},
+            ];
+            
+            categories.forEach(cat => {
+                if (text.toLowerCase().includes(cat.word)) {
+                    substances.push({
+                        id: cat.word,
+                        name: cat.name,
+                        energy: cat.energy,
+                        modi: [],
+                    });
+                    substanceIds.add(cat.word);
+                }
+            });
+            
+            // Добавляем модусы
+            const modusPatterns = [
+                {verb: 'мыслит', subject: 'разум'},
+                {verb: 'даётся', subject: 'предмет'},
+                {verb: 'называем', subject: 'чувственность'},
+                {verb: 'возникают', subject: 'понятие'},
+                {verb: 'создаёт', subject: 'разум'},
+                {verb: 'содержит', subject: 'созерцание'},
+            ];
+            
+            modusPatterns.forEach(mp => {
+                if (text.toLowerCase().includes(mp.verb) && substanceIds.has(mp.subject)) {
+                    const sub = substances.find(s => s.id === mp.subject);
+                    if (sub) sub.modi.push({name: mp.verb, value: mp.verb});
+                }
+            });
+            
+            // Противоречия
+            const tensions = [];
+            if (substanceIds.has('разум') && substanceIds.has('чувственность')) {
+                tensions.push({
+                    id: 't_0', pole_a: 'разум', pole_b: 'чувственность',
+                    reason: 'два источника познания', status: 'held',
+                });
+            }
+            if (substanceIds.has('созерцание') && substanceIds.has('понятие')) {
+                tensions.push({
+                    id: 't_1', pole_a: 'созерцание', pole_b: 'понятие',
+                    reason: 'начала познания', status: 'held',
+                });
+            }
+            if (substanceIds.has('свобода') && substanceIds.has('необходимость')) {
+                tensions.push({
+                    id: 't_2', pole_a: 'свобода', pole_b: 'необходимость',
+                    reason: 'антиномия', status: 'held',
+                });
+            }
+            
+            // Маркеры операторов
+            const operator_matches = findOperatorMarkers(text);
+            const operator_stats = countOperatorStats(operator_matches);
+            
+            data = {
+                substances,
+                tensions,
+                operator_matches,
+                operator_stats,
+                stats: {
+                    total_substances: substances.length,
+                    total_tensions: tensions.length,
+                    held_tensions: tensions.filter(t => t.status === 'held').length,
+                    resolved_tensions: tensions.filter(t => t.status === 'resolved').length,
+                },
+            };
+            
+            updateStats(data);
+            drawGraph();
+            renderOperatorMap();
+            renderSubstances();
+            renderTensions();
+            renderTextAnalysis();
+        }
+        
+        // ==================== ПОИСК ОПЕРАТОРОВ ====================
+        function findOperatorMarkers(text) {
+            const markers = {
+                split: [
+                    'с одной стороны', 'с другой стороны', 'во-первых', 'во-вторых', 'в-третьих',
+                    'прежде всего', 'затем', 'наконец', 'разделим', 'различать', 'различие между',
+                    'двояким образом', 'трояким образом', 'можно рассматривать', 'или... или',
+                ],
+                hold: [
+                    'антиномия', 'противоречие', 'противоположность', 'диалектика', 'парадокс',
+                    'конфликт', 'столкновение', 'несовместимость', 'взаимоисключающий',
+                    'но', 'однако', 'тем не менее', 'хотя', 'несмотря на', 'вопреки',
+                    'в то же время', 'между тем', 'не может быть', 'невозможно',
+                ],
+                transition: [
+                    'перейдём', 'перейти', 'переход', 'обратимся', 'рассмотрим теперь',
+                    'до сих пор', 'теперь же', 'выше было показано', 'далее', 'продолжим',
+                    'следовательно', 'таким образом', 'в свою очередь', 'напротив', 'наоборот',
+                ],
+                grammar_change: [
+                    'иначе говоря', 'другими словами', 'в ином смысле', 'в другом значении',
+                    'переосмысление', 'с иной точки зрения', 'можно сказать иначе',
+                    'то есть', 'а именно', 'иными словами', 'в сущности', 'по сути',
+                    'строго говоря', 'собственно', 'в строгом смысле', 'в широком смысле',
+                ],
+            };
+            
+            const matches = [];
+            const textLower = text.toLowerCase();
+            
+            for (const [opType, markerList] of Object.entries(markers)) {
+                for (const marker of markerList) {
+                    let searchPos = 0;
+                    while (true) {
+                        const idx = textLower.indexOf(marker, searchPos);
+                        if (idx === -1) break;
+                        
+                        // Определяем контекст (предложение)
+                        const start = Math.max(0, textLower.lastIndexOf('.', idx) + 1);
+                        const end = textLower.indexOf('.', idx + marker.length);
+                        const context = text.substring(
+                            start, 
+                            end === -1 ? Math.min(text.length, start + 150) : end + 1
+                        ).trim();
+                        
+                        matches.push({
+                            operator: opType,
+                            marker: marker,
+                            position: idx,
+                            context: context.substring(0, 120),
+                            confidence: marker.length > 5 ? 0.9 : 0.6,
+                        });
+                        
+                        searchPos = idx + marker.length;
+                    }
+                }
+            }
+            
+            // Убираем дубликаты (более длинные маркеры приоритетнее)
+            matches.sort((a, b) => b.marker.length - a.marker.length);
+            const unique = [];
+            const usedPositions = new Set();
+            
+            for (const m of matches) {
+                const key = `${m.position}-${m.operator}`;
+                if (!usedPositions.has(key)) {
+                    usedPositions.add(key);
+                    unique.push(m);
+                }
+            }
+            
+            return unique;
+        }
+        
+        function countOperatorStats(matches) {
+            const stats = { split: 0, hold: 0, transition: 0, grammar_change: 0 };
+            const seen = new Set();
+            
+            matches.forEach(m => {
+                const key = `${m.operator}-${m.marker}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    stats[m.operator] = (stats[m.operator] || 0) + 1;
+                }
+            });
+            
+            return stats;
+        }
+        
+        function emulateOperatorDetection(text, data) {
+            const matches = findOperatorMarkers(text);
+            return countOperatorStats(matches);
+        }
+        
+        // ==================== ГРАФ ====================
         function drawGraph() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (!data || !data.substances.length) return;
+            if (!data || !data.substances || !data.substances.length) return;
 
             const subs = data.substances;
-            const tens = data.tensions;
+            const tens = data.tensions || [];
             const positions = {};
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
-            const r = Math.min(cx, cy) * 0.4;
+            const r = Math.min(cx, cy) * 0.38;
             const n = subs.length;
 
             subs.forEach((s, i) => {
@@ -219,34 +752,48 @@
                 positions[s.id] = { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
             });
 
+            // Связи
             tens.forEach(t => {
                 const a = positions[t.pole_a];
                 const b = positions[t.pole_b];
                 if (!a || !b) return;
+                
                 ctx.beginPath();
                 ctx.moveTo(a.x, a.y);
                 ctx.lineTo(b.x, b.y);
-                ctx.strokeStyle = t.status === 'held' ? '#e94560' : '#2ecc71';
-                ctx.setLineDash(t.status === 'held' ? [8, 4] : []);
-                ctx.lineWidth = t.status === 'held' ? 3 : 2;
+                
+                if (t.status === 'held') {
+                    ctx.strokeStyle = '#e94560';
+                    ctx.setLineDash([8, 4]);
+                    ctx.lineWidth = 3;
+                } else {
+                    ctx.strokeStyle = '#2ecc71';
+                    ctx.setLineDash([]);
+                    ctx.lineWidth = 2;
+                }
                 ctx.stroke();
                 ctx.setLineDash([]);
+                
+                // Подпись
                 const mx = (a.x + b.x) / 2;
-                const my = (a.y + b.y) / 2 - 10;
+                const my = (a.y + b.y) / 2 - 12;
                 ctx.fillStyle = '#888';
                 ctx.font = '10px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(t.reason, mx, my);
+                ctx.fillText(t.reason || '', mx, my);
             });
 
+            // Узлы
             subs.forEach(s => {
                 const p = positions[s.id];
                 if (!p) return;
-                const radius = 20 + s.energy * 35;
+                
+                const radius = 18 + s.energy * 35;
                 const grad = ctx.createRadialGradient(p.x, p.y, radius * 0.3, p.x, p.y, radius);
                 grad.addColorStop(0, '#ff6b6b');
                 grad.addColorStop(0.5, s.energy > 0.5 ? '#e94560' : '#3498db');
                 grad.addColorStop(1, s.energy > 0.5 ? '#c23152' : '#2980b9');
+                
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
                 ctx.fillStyle = grad;
@@ -254,18 +801,70 @@
                 ctx.strokeStyle = '#fff';
                 ctx.lineWidth = 2;
                 ctx.stroke();
+                
+                // Имя
                 ctx.fillStyle = '#fff';
                 ctx.font = 'bold 13px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.fillText(s.name, p.x, p.y + 4);
+                
+                // Энергия
                 ctx.font = '10px sans-serif';
                 ctx.fillStyle = '#ccc';
                 ctx.fillText(s.energy.toFixed(2), p.x, p.y + radius + 14);
             });
         }
-
+        
+        // ==================== КАРТА ОПЕРАТОРОВ ====================
+        function renderOperatorMap() {
+            const container = document.getElementById('operatorMap');
+            if (!data || !data.operator_matches || !data.operator_matches.length) {
+                container.innerHTML = '<div style="color:#888;text-align:center;padding:40px;">Операторы не обнаружены. Попробуйте загрузить более объёмный текст.</div>';
+                return;
+            }
+            
+            const filtered = data.operator_matches.filter(m => activeFilters[m.operator] !== false);
+            
+            if (!filtered.length) {
+                container.innerHTML = '<div style="color:#888;text-align:center;padding:40px;">Все операторы скрыты фильтрами.</div>';
+                return;
+            }
+            
+            const icons = {
+                split: '✂️',
+                hold: '⚡',
+                transition: '🔄',
+                grammar_change: '🔀',
+            };
+            
+            const names = {
+                split: 'Split (разделение)',
+                hold: 'Hold (удержание)',
+                transition: 'Transition (переход)',
+                grammar_change: 'Grammar Change (смена грамматики)',
+            };
+            
+            container.innerHTML = filtered.map(m => `
+                <div class="operator-card">
+                    <div class="op-icon ${m.operator}">${icons[m.operator] || '•'}</div>
+                    <div class="op-info">
+                        <div class="op-marker">${names[m.operator] || m.operator}</div>
+                        <div style="color:#fff;">Маркер: «${m.marker}»</div>
+                        <div class="op-context">…${m.context}…</div>
+                        <div class="op-confidence">Уверенность: ${(m.confidence * 100).toFixed(0)}%</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // ==================== СУБСТАНЦИИ ====================
         function renderSubstances() {
             const container = document.getElementById('substanceList');
+            if (!data || !data.substances || !data.substances.length) {
+                container.innerHTML = '<div style="color:#888;text-align:center;padding:40px;">Нет данных</div>';
+                return;
+            }
+            
             container.innerHTML = data.substances.map(s => `
                 <div class="substance-card">
                     <h3>${s.name}</h3>
@@ -275,67 +874,201 @@
                 </div>
             `).join('');
         }
-
+        
+        // ==================== ПРОТИВОРЕЧИЯ ====================
         function renderTensions() {
             const container = document.getElementById('tensionList');
+            if (!data || !data.tensions || !data.tensions.length) {
+                container.innerHTML = '<div style="color:#888;text-align:center;padding:40px;">Противоречия не обнаружены</div>';
+                return;
+            }
+            
             container.innerHTML = data.tensions.map(t => `
                 <div class="tension-card">
                     <div class="status ${t.status}"></div>
                     <div class="info">
                         <strong>${t.pole_a}</strong> ↔ <strong>${t.pole_b}</strong>
-                        <div class="reason">${t.reason} · ${t.status === 'held' ? 'Удерживается' : 'Разрешено'}</div>
+                        <div class="reason">${t.reason || ''} · ${t.status === 'held' ? 'Удерживается' : 'Разрешено'}</div>
                     </div>
                 </div>
             `).join('');
         }
-
+        
+        // ==================== ТЕКСТ С РАЗМЕТКОЙ ====================
         function renderTextAnalysis() {
             const container = document.getElementById('textAnalysis');
-            if (!originalText || !data) return;
+            if (!originalText || !data) {
+                container.innerHTML = '<div style="color:#888;">Нет данных для отображения</div>';
+                return;
+            }
 
-            let html = originalText;
+            let html = escapeHTML(originalText);
+            
+            // Собираем все спаны для подсветки
+            const spans = [];
+            
+            // Субстанции
+            if (activeFilters.substance && data.substances) {
+                data.substances.forEach(s => {
+                    const regex = new RegExp(`(${escapeRegex(s.name)})`, 'gi');
+                    let match;
+                    while ((match = regex.exec(originalText)) !== null) {
+                        spans.push({
+                            start: match.index,
+                            end: match.index + match[0].length,
+                            text: match[0],
+                            type: 'substance',
+                            title: `Субстанция: ${s.name} (энергия: ${s.energy.toFixed(2)})`,
+                            className: 'hl-substance',
+                        });
+                    }
+                });
+            }
+            
+            // Модусы
+            if (activeFilters.modus && data.substances) {
+                const allModi = [];
+                data.substances.forEach(s => {
+                    if (s.modi) s.modi.forEach(m => allModi.push(m.value));
+                });
+                allModi.forEach(m => {
+                    const regex = new RegExp(`(${escapeRegex(m)})`, 'gi');
+                    let match;
+                    while ((match = regex.exec(originalText)) !== null) {
+                        spans.push({
+                            start: match.index,
+                            end: match.index + match[0].length,
+                            text: match[0],
+                            type: 'modus',
+                            title: 'Модус',
+                            className: 'hl-modus',
+                        });
+                    }
+                });
+            }
+            
+            // Маркеры операторов
+            if (data.operator_matches) {
+                data.operator_matches.forEach(m => {
+                    if (activeFilters[m.operator] !== false) {
+                        const idx = originalText.toLowerCase().indexOf(m.marker);
+                        if (idx !== -1) {
+                            spans.push({
+                                start: idx,
+                                end: idx + m.marker.length,
+                                text: m.marker,
+                                type: m.operator,
+                                title: `Оператор: ${m.operator} (${(m.confidence * 100).toFixed(0)}%)`,
+                                className: `hl-${m.operator}`,
+                            });
+                        }
+                    }
+                });
+            }
+            
+            // Маркеры противоречий
+            if (activeFilters.hold) {
+                const tensionMarkers = ['но', 'однако', 'хотя', 'тем не менее', 'вопреки', 'напротив', 'с другой стороны', 'в то же время', 'тогда как', 'а не', 'в отличие'];
+                tensionMarkers.forEach(m => {
+                    const regex = new RegExp(`(${escapeRegex(m)})`, 'gi');
+                    let match;
+                    while ((match = regex.exec(originalText)) !== null) {
+                        spans.push({
+                            start: match.index,
+                            end: match.index + match[0].length,
+                            text: match[0],
+                            type: 'hold',
+                            title: 'Маркер противоречия (Hold)',
+                            className: 'hl-hold',
+                        });
+                    }
+                });
+            }
+            
+            // Сортируем спаны по позиции и убираем пересекающиеся
+            spans.sort((a, b) => a.start - b.start || b.end - a.end);
+            const filteredSpans = [];
+            let lastEnd = 0;
+            for (const span of spans) {
+                if (span.start >= lastEnd) {
+                    filteredSpans.push(span);
+                    lastEnd = span.end;
+                }
+            }
+            
+            // Применяем спаны с конца к началу
+            filteredSpans.sort((a, b) => b.start - a.start);
+            for (const span of filteredSpans) {
+                const before = html.substring(0, span.start);
+                const text = html.substring(span.start, span.end);
+                const after = html.substring(span.end);
+                html = before + 
+                    `<span class="${span.className}" title="${span.title}">${text}</span>` + 
+                    after;
+            }
 
-            // Подсвечиваем субстанции
-            data.substances.forEach(s => {
-                const regex = new RegExp(`(${s.name})`, 'gi');
-                html = html.replace(regex, `<span class="substance-hl" title="Субстанция: ${s.name} (энергия: ${s.energy.toFixed(2)})">$1</span>`);
+            // Легенда
+            let legendHTML = '<div class="legend">';
+            if (activeFilters.substance) legendHTML += '<span><span class="swatch" style="background:#e9456030;border-bottom:2px solid #e94560"></span> Субстанции</span>';
+            if (activeFilters.modus) legendHTML += '<span><span class="swatch" style="background:#3498db30;border-bottom:2px dotted #3498db"></span> Модусы</span>';
+            if (activeFilters.hold) legendHTML += '<span><span class="swatch" style="background:#FF880030;border-bottom:2px dashed #f39c12"></span> Hold</span>';
+            if (activeFilters.split) legendHTML += '<span><span class="swatch" style="background:#44CC4430;border-bottom:2px solid #44CC44"></span> Split</span>';
+            if (activeFilters.transition) legendHTML += '<span><span class="swatch" style="background:#AA44FF30;border-bottom:2px dotted #AA44FF"></span> Transition</span>';
+            if (activeFilters.grammar_change) legendHTML += '<span><span class="swatch" style="background:#00BBBB30;border-bottom:2px dashed #00BBBB"></span> Grammar Ch.</span>';
+            legendHTML += '</div>';
+            
+            container.innerHTML = legendHTML + html;
+            
+            // Всплывающие подсказки
+            container.querySelectorAll('[title]').forEach(el => {
+                el.addEventListener('mouseenter', (e) => {
+                    tooltip.textContent = el.getAttribute('title');
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = (e.pageX + 10) + 'px';
+                    tooltip.style.top = (e.pageY - 30) + 'px';
+                });
+                el.addEventListener('mouseleave', () => {
+                    tooltip.style.display = 'none';
+                });
             });
-
-            // Подсвечиваем маркеры противоречий
-            const markers = ['но', 'однако', 'хотя', 'тем не менее', 'вопреки', 'напротив', 'с другой стороны', 'в то же время', 'тогда как', 'а не', 'в отличие'];
-            markers.forEach(m => {
-                const regex = new RegExp(`(${m})`, 'gi');
-                html = html.replace(regex, `<span class="tension-hl" title="Маркер противоречия">$1</span>`);
-            });
-
-            // Подсвечиваем модусы
-            const allModi = [];
-            data.substances.forEach(s => {
-                if (s.modi) s.modi.forEach(m => allModi.push(m.value));
-            });
-            allModi.forEach(m => {
-                const regex = new RegExp(`(${m})`, 'gi');
-                html = html.replace(regex, `<span class="modus-hl" title="Модус">$1</span>`);
-            });
-
-            container.innerHTML = `
-                <div class="legend">
-                    <span><span class="swatch" style="background:#e9456040;border-bottom:2px solid #e94560"></span> Субстанции</span>
-                    <span><span class="swatch" style="background:#f39c1240;border-bottom:2px dashed #f39c12"></span> Противоречия</span>
-                    <span><span class="swatch" style="background:#3498db40;border-bottom:2px dotted #3498db"></span> Модусы</span>
-                </div>
-                ${html}
-            `;
         }
-
+        
+        // ==================== ВКЛАДКИ ====================
         function switchTab(name) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-            const tabIndex = { graph: 1, substances: 2, tensions: 3, text: 4 }[name];
-            document.querySelector(`.tab:nth-child(${tabIndex})`).classList.add('active');
-            document.getElementById(`tab-${name}`).classList.add('active');
+            
+            const tabMap = { graph: 0, operators: 1, substances: 2, tensions: 3, text: 4 };
+            const idx = tabMap[name] !== undefined ? tabMap[name] : 0;
+            
+            const tabs = document.querySelectorAll('.tab');
+            if (tabs[idx]) tabs[idx].classList.add('active');
+            
+            const pane = document.getElementById(`tab-${name}`);
+            if (pane) pane.classList.add('active');
+            
             if (name === 'graph') { resize(); drawGraph(); }
         }
+        
+        // ==================== УТИЛИТЫ ====================
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+        
+        function escapeRegex(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+        
+        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+        // Автоматически загружаем пример при открытии
+        window.addEventListener('DOMContentLoaded', () => {
+            loadExample('kant');
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.add('active');
+            });
+        });
     </script>
 </body>
 </html>
