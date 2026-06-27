@@ -3,128 +3,517 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GrammaLang v0.3 — Анализ воли</title>
+    <title>GrammaLang v0.3 — Онтологический анализатор</title>
+    <!-- Подключаем D3.js для отрисовки графов -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #eee; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        h1 { text-align: center; color: #e94560; margin-bottom: 20px; }
-        textarea { width: 100%; height: 200px; background: #16213e; color: #eee; border: 2px solid #0f3460; border-radius: 10px; padding: 15px; font-size: 14px; resize: vertical; }
-        button { display: block; width: 100%; padding: 15px; background: #e94560; color: white; border: none; border-radius: 10px; font-size: 18px; cursor: pointer; margin: 15px 0; transition: 0.3s; }
-        button:hover { background: #c23152; }
-        .result { display: none; background: #16213e; border-radius: 10px; padding: 20px; margin-top: 20px; }
-        .summary { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
-        .card { flex: 1; min-width: 150px; background: #0f3460; border-radius: 10px; padding: 15px; text-align: center; }
-        .card .value { font-size: 32px; font-weight: bold; color: #e94560; }
-        .card .label { font-size: 14px; color: #aaa; }
-        .graphs { display: flex; gap: 20px; flex-wrap: wrap; }
-        .graph-box { flex: 1; min-width: 400px; background: #0f3460; border-radius: 10px; padding: 15px; }
-        .graph-box h3 { text-align: center; margin-bottom: 10px; }
-        .graph-box svg { width: 100%; height: 300px; background: #16213e; border-radius: 8px; }
-        .link { stroke: #aaa; stroke-opacity: 0.6; stroke-width: 2px; }
-        .sentence-list { max-height: 300px; overflow-y: auto; margin-top: 15px; }
-        .sentence-item { display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #0f3460; }
-        .badge { padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; color: white; margin-right: 10px; min-width: 90px; text-align: center; }
-        .badge-parmenides { background: #e94560; }
-        .badge-heraclitus { background: #2196F3; }
-        .badge-neutral { background: #666; }
+        /* --- Общие стили --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+            border: 1px solid #333;
+        }
+        h1 {
+            color: #bb86fc;
+            text-align: center;
+            margin-top: 0;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+        h1 small {
+            color: #888;
+            font-size: 0.5em;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #bb86fc;
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+        button {
+            background-color: #bb86fc;
+            color: #121212;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            letter-spacing: 0.5px;
+        }
+        button:hover {
+            background-color: #a06cdb;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 16px;
+            color: #aaa;
+            min-height: 24px;
+        }
+        .status .error {
+            color: #ff6b6b;
+        }
+        .status .success {
+            color: #69db7c;
+        }
+
+        /* --- Стили для карточек результатов --- */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background-color: #2d2d2d;
+            border: 1px solid #3d3d3d;
+            border-radius: 10px;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        .card .label {
+            font-size: 14px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .card .value {
+            font-size: 28px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        .card .value.parmenides { color: #ff6b6b; }
+        .card .value.heraclitus { color: #4dabf7; }
+        .card .value.hybrid { color: #fcc419; }
+        .card .value.neutral { color: #adb5bd; }
+
+        /* --- Стили для списка предложений --- */
+        .sentences-container {
+            margin-top: 30px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+        .sentences-container h3 {
+            color: #ccc;
+            font-weight: 300;
+            margin-top: 0;
+        }
+        .sentence-item {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #2a2a2a;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        .sentence-item .badge {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 20px;
+            flex-shrink: 0;
+            min-width: 70px;
+            text-align: center;
+        }
+        .badge.parmenides { background-color: #ff6b6b; color: #1e1e1e; }
+        .badge.heraclitus { background-color: #4dabf7; color: #1e1e1e; }
+        .badge.neutral { background-color: #495057; color: #e0e0e0; }
+
+        /* --- Контейнеры для графов --- */
+        .graphs-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .graph-box {
+            background-color: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 350px;
+        }
+        .graph-box h3 {
+            text-align: center;
+            color: #ccc;
+            font-weight: 300;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        .graph-box h3 .parmenides { color: #ff6b6b; }
+        .graph-box h3 .heraclitus { color: #4dabf7; }
+        .graph-box svg {
+            display: block;
+            margin: 0 auto;
+            width: 100%;
+            height: auto;
+            max-height: 350px;
+        }
+        .graph-box .placeholder {
+            text-align: center;
+            color: #666;
+            padding: 50px 0;
+            font-style: italic;
+        }
+        .graph-box .error-message {
+            text-align: center;
+            color: #ff6b6b;
+            padding: 50px 0;
+        }
+
+        /* --- Адаптивность --- */
+        @media (max-width: 768px) {
+            .graphs-container {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 15px;
+            }
+            button {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>🔮 GrammaLang v0.3</h1>
-    <textarea id="textInput" placeholder="Введите философский текст на русском языке...">Бытие есть, и оно всегда неизменно. Всё течёт, всё изменяется, но борьба остаётся.</textarea>
-    <button onclick="analyze()">Анализировать волю</button>
-    <div id="loading" style="text-align:center;display:none;">⏳ Анализ... подождите 10-30 секунд...</div>
-    <div id="result" class="result">
-        <div class="summary" id="summary"></div>
-        <div class="graphs">
-            <div class="graph-box"><h3>Парменид (иерархия)</h3><div id="parmenidesGraph"></div></div>
-            <div class="graph-box"><h3>Гераклит (сеть)</h3><div id="heraclitusGraph"></div></div>
+    <div class="container">
+        <h1>GrammaLang <small>v0.3 — онтологический анализатор</small></h1>
+
+        <!-- Текстовое поле -->
+        <textarea id="textInput" placeholder="Вставьте философский текст на русском языке для анализа...">Бытие есть, и оно не может не быть. Небытия нет, и его нельзя ни помыслить, ни высказать. Всё течёт, всё изменяется, и невозможно дважды войти в одну и ту же реку. Борьба есть отец всего и царь всего. Единое вечно, неподвижно и конечно. Мысль и бытие — одно и то же. Из противоположностей рождается прекрасная гармония.</textarea>
+
+        <!-- Кнопки управления -->
+        <div class="controls">
+            <button id="analyzeBtn">Анализировать волю</button>
         </div>
-        <h3>Предложения</h3>
-        <div class="sentence-list" id="sentences"></div>
+        <div id="status" class="status">Готов к анализу. Нажмите кнопку.</div>
+
+        <!-- Карточки результатов -->
+        <div id="results" class="results-grid" style="display: none;">
+            <div class="card"><div class="label">Средний индекс</div><div id="meanIndex" class="value">0.00</div></div>
+            <div class="card"><div class="label">Тип онтологии</div><div id="ontologyType" class="value">—</div></div>
+            <div class="card"><div class="label">Парменид</div><div id="parmenidesShare" class="value">0%</div></div>
+            <div class="card"><div class="label">Гераклит</div><div id="heraclitusShare" class="value">0%</div></div>
+        </div>
+
+        <!-- Графы -->
+        <div class="graphs-container" id="graphsContainer">
+            <div class="graph-box" id="parmenidesGraph">
+                <h3>Парменид-онтология <span class="parmenides">(иерархия)</span></h3>
+                <div id="parmenidesPlaceholder" class="placeholder">Граф появится после анализа.</div>
+                <svg id="parmenidesSvg"></svg>
+                <div id="parmenidesError" class="error-message" style="display: none;"></div>
+            </div>
+            <div class="graph-box" id="heraclitusGraph">
+                <h3>Гераклит-онтология <span class="heraclitus">(сеть)</span></h3>
+                <div id="heraclitusPlaceholder" class="placeholder">Граф появится после анализа.</div>
+                <svg id="heraclitusSvg"></svg>
+                <div id="heraclitusError" class="error-message" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Список предложений -->
+        <div id="sentencesContainer" class="sentences-container" style="display: none;">
+            <h3>Разбор по предложениям</h3>
+            <div id="sentencesList"></div>
+        </div>
     </div>
-</div>
 
-<script>
-async function analyze() {
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('result').style.display = 'none';
-    
-    const text = document.getElementById('textInput').value;
-    const response = await fetch('/analyze', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({text: text})
-    });
-    const data = await response.json();
-    
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('result').style.display = 'block';
-    
-    // Сводка
-    document.getElementById('summary').innerHTML = `
-        <div class="card"><div class="value">${data.summary.mean.toFixed(2)}</div><div class="label">Индекс воли</div></div>
-        <div class="card"><div class="value">${(data.summary.parmenides_share*100).toFixed(0)}%</div><div class="label">Парменид</div></div>
-        <div class="card"><div class="value">${(data.summary.heraclitus_share*100).toFixed(0)}%</div><div class="label">Гераклит</div></div>
-        <div class="card"><div class="value">${data.ontology_type}</div><div class="label">Тип онтологии</div></div>
-    `;
-    
-    // Графы
-    drawGraph(data.parmenides_graph, '#parmenidesGraph', '#e94560');
-    drawGraph(data.heraclitus_graph, '#heraclitusGraph', '#2196F3');
-    
-    // Предложения
-    let sentHTML = '';
-    data.sentences.forEach((s, i) => {
-        const idx = data.indices[i] || 0;
-        let badge = 'badge-neutral', label = 'Нейтрально';
-        if (idx > 0.3) { badge = 'badge-parmenides'; label = 'Парменид'; }
-        else if (idx < -0.3) { badge = 'badge-heraclitus'; label = 'Гераклит'; }
-        sentHTML += `<div class="sentence-item"><span class="badge ${badge}">${label}</span><span>${s}</span></div>`;
-    });
-    document.getElementById('sentences').innerHTML = sentHTML;
-}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const textInput = document.getElementById('textInput');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const statusDiv = document.getElementById('status');
 
-function drawGraph(graphData, selector, color) {
-    const container = document.querySelector(selector);
-    container.innerHTML = '';
-    const width = container.clientWidth || 400;
-    const height = 300;
-    
-    if (!graphData.nodes || graphData.nodes.length === 0) {
-        container.innerHTML = '<p style="color:#aaa;text-align:center;padding:50px;">Нет данных</p>';
-        return;
-    }
-    
-    const svg = d3.select(selector).append('svg').attr('width', width).attr('height', height);
-    
-    const simulation = d3.forceSimulation(graphData.nodes)
-        .force('link', d3.forceLink(graphData.links).id(d => d.id).distance(100))
-        .force('charge', d3.forceManyBody().strength(-300))
-        .force('center', d3.forceCenter(width/2, height/2));
-    
-    const link = svg.append('g').selectAll('line').data(graphData.links)
-        .enter().append('line').attr('stroke', '#aaa').attr('stroke-opacity', 0.6).attr('stroke-width', 2);
-    
-    const node = svg.append('g').selectAll('g').data(graphData.nodes)
-        .enter().append('g');
-    
-    node.append('circle').attr('r', d => d.type === 'substance' ? 12 : 8)
-        .attr('fill', d => d.type === 'substance' ? color : '#aaa')
-        .attr('stroke', '#fff').attr('stroke-width', 2);
-    
-    node.append('text').text(d => d.id).attr('x', 15).attr('y', 4)
-        .attr('fill', '#fff').attr('font-size', '10px');
-    
-    simulation.on('tick', () => {
-        link.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
-            .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
-        node.attr('transform', d => `translate(${d.x},${d.y})`);
-    });
-}
-</script>
+            const resultsDiv = document.getElementById('results');
+            const meanIndexSpan = document.getElementById('meanIndex');
+            const ontologyTypeSpan = document.getElementById('ontologyType');
+            const parmenidesShareSpan = document.getElementById('parmenidesShare');
+            const heraclitusShareSpan = document.getElementById('heraclitusShare');
+
+            const sentencesContainer = document.getElementById('sentencesContainer');
+            const sentencesList = document.getElementById('sentencesList');
+
+            // SVG элементы для графов
+            const parmenidesSvg = document.getElementById('parmenidesSvg');
+            const heraclitusSvg = document.getElementById('heraclitusSvg');
+            const parmenidesPlaceholder = document.getElementById('parmenidesPlaceholder');
+            const heraclitusPlaceholder = document.getElementById('heraclitusPlaceholder');
+            const parmenidesError = document.getElementById('parmenidesError');
+            const heraclitusError = document.getElementById('heraclitusError');
+
+            // ==================== Функция отрисовки графа ====================
+            function renderGraph(svgElement, data, title, color) {
+                // Очищаем SVG
+                svgElement.innerHTML = '';
+
+                // Проверяем наличие данных
+                if (!data || !data.nodes || data.nodes.length === 0) {
+                    const placeholder = svgElement.parentElement.querySelector('.placeholder');
+                    if (placeholder) placeholder.style.display = 'block';
+                    return;
+                }
+
+                // Скрываем placeholder
+                const placeholder = svgElement.parentElement.querySelector('.placeholder');
+                if (placeholder) placeholder.style.display = 'none';
+
+                // Настройки отображения
+                const width = svgElement.parentElement.clientWidth - 30 || 500;
+                const height = Math.min(350, width * 0.7);
+
+                // Создаем SVG холст
+                const svg = d3.select(svgElement)
+                    .attr('viewBox', `0 0 ${width} ${height}`)
+                    .attr('preserveAspectRatio', 'xMidYMid meet')
+                    .style('width', '100%')
+                    .style('height', 'auto');
+
+                const g = svg.append('g');
+
+                // Строим граф с помощью force-симуляции
+                const simulation = d3.forceSimulation(data.nodes)
+                    .force('link', d3.forceLink(data.links).id(d => d.id).distance(100))
+                    .force('charge', d3.forceManyBody().strength(-300))
+                    .force('center', d3.forceCenter(width / 2, height / 2))
+                    .force('collision', d3.forceCollide().radius(30));
+
+                // Рисуем связи
+                const link = g.append('g')
+                    .selectAll('line')
+                    .data(data.links)
+                    .enter()
+                    .append('line')
+                    .attr('stroke', '#555')
+                    .attr('stroke-width', 1.5)
+                    .attr('stroke-dasharray', d => d.type === 'boundary' ? '4,4' : 'none');
+
+                // Рисуем узлы
+                const node = g.append('g')
+                    .selectAll('circle')
+                    .data(data.nodes)
+                    .enter()
+                    .append('circle')
+                    .attr('r', d => d.type === 'substance' ? 20 + d.energy * 3 : 12)
+                    .attr('fill', d => d.type === 'substance' ? color : (d.process ? '#69db7c' : '#fcc419'))
+                    .attr('stroke', '#fff')
+                    .attr('stroke-width', 1.5)
+                    .call(d3.drag()
+                        .on('start', dragstarted)
+                        .on('drag', dragged)
+                        .on('end', dragended)
+                    );
+
+                // Добавляем подписи
+                const label = g.append('g')
+                    .selectAll('text')
+                    .data(data.nodes)
+                    .enter()
+                    .append('text')
+                    .attr('text-anchor', 'middle')
+                    .attr('dy', '.35em')
+                    .attr('fill', '#e0e0e0')
+                    .attr('font-size', d => d.type === 'substance' ? '14px' : '11px')
+                    .attr('font-weight', d => d.type === 'substance' ? 'bold' : 'normal')
+                    .text(d => d.id);
+
+                // Обновляем позиции при симуляции
+                simulation.on('tick', () => {
+                    link
+                        .attr('x1', d => d.source.x)
+                        .attr('y1', d => d.source.y)
+                        .attr('x2', d => d.target.x)
+                        .attr('y2', d => d.target.y);
+
+                    node
+                        .attr('cx', d => d.x)
+                        .attr('cy', d => d.y);
+
+                    label
+                        .attr('x', d => d.x)
+                        .attr('y', d => d.y);
+                });
+
+                // Функции для drag
+                function dragstarted(event, d) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x;
+                    d.fy = d.y;
+                }
+                function dragged(event, d) {
+                    d.fx = event.x;
+                    d.fy = event.y;
+                }
+                function dragended(event, d) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    d.fx = null;
+                    d.fy = null;
+                }
+            }
+
+            // ==================== Обработка кнопки "Анализировать" ====================
+            analyzeBtn.addEventListener('click', async function() {
+                const text = textInput.value.trim();
+                if (!text) {
+                    statusDiv.innerHTML = '<span class="error">Введите текст для анализа!</span>';
+                    return;
+                }
+
+                // Блокируем кнопку
+                analyzeBtn.disabled = true;
+                analyzeBtn.textContent = 'Анализируем...';
+                statusDiv.innerHTML = '⏳ Выполняется анализ...';
+
+                // Скрываем старые результаты
+                resultsDiv.style.display = 'none';
+                sentencesContainer.style.display = 'none';
+                parmenidesPlaceholder.style.display = 'block';
+                heraclitusPlaceholder.style.display = 'block';
+                parmenidesError.style.display = 'none';
+                heraclitusError.style.display = 'none';
+
+                try {
+                    // Отправляем запрос на сервер
+                    const response = await fetch('/analyze', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ text: text })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Сервер вернул ошибку ${response.status}: ${errorText}`);
+                    }
+
+                    const result = await response.json();
+
+                    // Проверяем наличие данных
+                    if (!result || !result.summary) {
+                        throw new Error('Получен пустой или некорректный ответ от сервера.');
+                    }
+
+                    // --- Обновляем карточки ---
+                    resultsDiv.style.display = 'grid';
+                    const mean = result.summary.mean || 0;
+                    meanIndexSpan.textContent = mean.toFixed(2);
+                    meanIndexSpan.className = 'value';
+
+                    const type = result.ontology_type || 'hybrid';
+                    ontologyTypeSpan.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+                    ontologyTypeSpan.className = 'value ' + type;
+
+                    const pShare = (result.summary.parmenides_share || 0) * 100;
+                    const hShare = (result.summary.heraclitus_share || 0) * 100;
+                    parmenidesShareSpan.textContent = pShare.toFixed(0) + '%';
+                    heraclitusShareSpan.textContent = hShare.toFixed(0) + '%';
+
+                    // --- Обновляем список предложений ---
+                    if (result.sentences && result.sentences.length > 0) {
+                        sentencesContainer.style.display = 'block';
+                        sentencesList.innerHTML = '';
+                        const indices = result.will_indices || result.indices || [];
+                        result.sentences.forEach((sentence, i) => {
+                            const index = indices[i] || 0;
+                            let badgeClass = 'neutral';
+                            let badgeText = 'Нейтрально';
+                            if (index > 0.3) {
+                                badgeClass = 'parmenides';
+                                badgeText = 'Парменид';
+                            } else if (index < -0.3) {
+                                badgeClass = 'heraclitus';
+                                badgeText = 'Гераклит';
+                            }
+                            const div = document.createElement('div');
+                            div.className = 'sentence-item';
+                            div.innerHTML = `
+                                <span class="badge ${badgeClass}">${badgeText}</span>
+                                <span>${sentence}</span>
+                                <span style="color: #888; font-size: 12px; margin-left: auto; flex-shrink: 0;">${index.toFixed(2)}</span>
+                            `;
+                            sentencesList.appendChild(div);
+                        });
+                    }
+
+                    // --- Отрисовываем графы ---
+                    if (result.parmenides_ontology) {
+                        renderGraph(parmenidesSvg, result.parmenides_ontology, 'Парменид', '#ff6b6b');
+                    } else {
+                        parmenidesPlaceholder.style.display = 'block';
+                    }
+
+                    if (result.heraclitus_ontology) {
+                        renderGraph(heraclitusSvg, result.heraclitus_ontology, 'Гераклит', '#4dabf7');
+                    } else {
+                        heraclitusPlaceholder.style.display = 'block';
+                    }
+
+                    // --- Успешный статус ---
+                    statusDiv.innerHTML = `<span class="success">✅ Анализ завершён. Количество предложений: ${result.sentences ? result.sentences.length : 0}</span>`;
+
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    statusDiv.innerHTML = `<span class="error">❌ Ошибка: ${error.message}</span>`;
+                    parmenidesError.textContent = `Ошибка загрузки: ${error.message}`;
+                    parmenidesError.style.display = 'block';
+                    heraclitusError.textContent = `Ошибка загрузки: ${error.message}`;
+                    heraclitusError.style.display = 'block';
+                } finally {
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.textContent = 'Анализировать волю';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

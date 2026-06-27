@@ -1,0 +1,3 @@
+[console_scripts]
+udeval = udtools.cli:main_eval
+udvalidate = udtools.cli:main
