@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyd
+*.dll
+*.png
+out_*.json
+out_*.png
+result*.json
+test*.txt
+text_*.txt
+parmenides_*.json
+heraclitus_*.json
+grammalang/
+src/grammalang/
